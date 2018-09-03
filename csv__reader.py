@@ -13,3 +13,4 @@ for i in ('Source', 'Confidence', 'IsDepiction', 'IsOccluded', 'IsTruncated', 'I
 
 with open('dump', 'wb') as f:
     pickle.dump(df, f)
+
