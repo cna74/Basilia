@@ -1,3 +1,4 @@
+import os
 import pickle
 import pandas as pd
 from zipfile import ZipFile
@@ -5,6 +6,8 @@ from zipfile import ZipFile
 """
 minify and dumped_bbox the origin dataset
 """
+
+DATADIR = '/media/cna/backpack/dataset/Open_Image/'
 
 
 def bbox_dumper(dst: str = None):
@@ -16,7 +19,6 @@ def bbox_dumper(dst: str = None):
 
     with open('dumped_bbox', 'wb') as f:
         pickle.dump(df, f)
-    del df
 
 
 def img_dumper(dst: str = None):
@@ -32,6 +34,29 @@ def img_dumper(dst: str = None):
         pickle.dump(lst, f)
 
 
-bbox_dumper()
-img_dumper()
+def img_loader(dst: str = None) -> list:
+    if not dst:
+        dst = './dumped_img_dirs'
+    with open(dst, 'rb') as f:
+        return pickle.load(f)
 
+
+def bbox_loader(dst: str = None) -> pd.DataFrame:
+    if not dst:
+        dst = './dumped_bbox'
+    with open(dst, 'rb') as f:
+        return pickle.load(f)
+
+
+def label_loader(dst: str = None) -> pd.DataFrame:
+    if not dst:
+        dst = os.path.join(DATADIR, 'class-descriptions-boxable.csv')
+    df = pd.read_csv(dst, dtype='str')
+    return df
+
+
+# bbox_dumper()
+# img_dumper()
+# lst = img_loader()
+# bbox = bbox_loader()
+# labels = label_loader()
