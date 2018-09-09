@@ -16,8 +16,8 @@ else:
     else:
         DATA_DIR = '/media/cna/backpack/dataset/Open_Image/'
 
-if not os.path.isdir(DATA_DIR) or not os.path.exists(DATA_DIR):
-    raise NotADirectoryError(f'{DATA_DIR} is not a directory or not Exist at all')
+# if not os.path.isdir(DATA_DIR) or not os.path.exists(DATA_DIR):
+#     raise NotADirectoryError(f'{DATA_DIR} is not a directory or not Exist at all')
 
 
 def bbox_dumper(dst: str = None):
@@ -75,7 +75,7 @@ def label_loader(dst: str = None) -> pd.DataFrame:
 
 # bbox_dumper()
 # img_dumper()
-label_dumper()
+# label_dumper()
 
 # lst = img_loader()
 # bbox = bbox_loader()
