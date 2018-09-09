@@ -1,4 +1,5 @@
 import os
+import sys
 import pickle
 import pandas as pd
 from zipfile import ZipFile
@@ -7,7 +8,16 @@ __doc__ = """
 minify and dumped_bbox the origin dataset
 """
 
-DATA_DIR = '/media/cna/backpack/dataset/Open_Image/'
+if len(sys.argv) == 1:
+    DATA_DIR = '/media/cna/backpack/dataset/Open_Image/'
+else:
+    if str(sys.argv[1]).startswith('--'):
+        DATA_DIR = str(sys.argv[1])[2:]
+    else:
+        DATA_DIR = '/media/cna/backpack/dataset/Open_Image/'
+
+if not os.path.isdir(DATA_DIR) or not os.path.exists(DATA_DIR):
+    raise NotADirectoryError(f'{DATA_DIR} is not a directory or not Exist at all')
 
 
 def bbox_dumper(dst: str = None):
@@ -33,6 +43,15 @@ def img_dumper(dst: str = None):
         pickle.dump(lst, f)
 
 
+def label_dumper(dst: str = None):
+    if not dst:
+        dst = os.path.join(DATA_DIR, 'class-descriptions-boxable.csv')
+    df = pd.read_csv(dst, dtype='str', names=['code', 'name'], index_col=[1])
+
+    with open('dumped_labels', 'wb') as f:
+        pickle.dump(df, f)
+
+
 def img_loader(dst: str = None) -> list:
     if not dst:
         dst = './dumped_img_dirs'
@@ -49,13 +68,15 @@ def bbox_loader(dst: str = None) -> pd.DataFrame:
 
 def label_loader(dst: str = None) -> pd.DataFrame:
     if not dst:
-        dst = os.path.join(DATA_DIR, 'class-descriptions-boxable.csv')
-    df = pd.read_csv(dst, dtype='str')
-    return df
+        dst = 'dumped_labels'
+    with open(dst, 'rb') as f:
+        return pickle.load(f)
 
 
 # bbox_dumper()
 # img_dumper()
+label_dumper()
+
 # lst = img_loader()
 # bbox = bbox_loader()
 # labels = label_loader()
