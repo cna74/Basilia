@@ -27,7 +27,7 @@ def bbox_dumper(dst: str = None):
     for i in ('Source', 'Confidence', 'IsDepiction', 'IsOccluded', 'IsTruncated', 'IsInside'):
         df = df.drop(i, axis=1)
 
-    with open('dumped_bbox', 'wb') as f:
+    with open('dumped/dumped_bbox', 'wb') as f:
         pickle.dump(df, f)
 
 
@@ -39,7 +39,7 @@ def img_dumper(dst: str = None):
         file = dst.format(i)
         with ZipFile(file, 'r') as zip_:
             lst.extend(zip_.namelist()[1:])
-    with open('dumped_img_dirs', 'wb') as f:
+    with open('dumped/dumped_img_dirs', 'wb') as f:
         pickle.dump(lst, f)
 
 
@@ -48,27 +48,27 @@ def label_dumper(dst: str = None):
         dst = os.path.join(DATA_DIR, 'class-descriptions-boxable.csv')
     df = pd.read_csv(dst, dtype='str', names=['code', 'name'], index_col=[1])
 
-    with open('dumped_labels', 'wb') as f:
+    with open('dumped/dumped_labels', 'wb') as f:
         pickle.dump(df, f)
 
 
 def img_loader(dst: str = None) -> list:
     if not dst:
-        dst = './dumped_img_dirs'
+        dst = './dumped/dumped_img_dirs'
     with open(dst, 'rb') as f:
         return pickle.load(f)
 
 
 def bbox_loader(dst: str = None) -> pd.DataFrame:
     if not dst:
-        dst = './dumped_bbox'
+        dst = './dumped/dumped_bbox'
     with open(dst, 'rb') as f:
         return pickle.load(f)
 
 
 def label_loader(dst: str = None) -> pd.DataFrame:
     if not dst:
-        dst = 'dumped_labels'
+        dst = 'dumped/dumped_labels'
     with open(dst, 'rb') as f:
         return pickle.load(f)
 
