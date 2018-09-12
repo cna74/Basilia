@@ -15,12 +15,15 @@ JSON_ = json.load(open('dumped/bbox_labels_600_hierarchy.json'))['Subcategory']
 
 class Finder:
 
-    def __init__(self, search_for=None, father=False, size=(224, 224)):
+    def __init__(self, search_for=None, father=False, size=None):
         self.classes = []
         self.dirs = []
         self.images_as_array = []
         self.images = None
-        self.size = size
+
+        if not size:
+            print("size = (224, 224) as default")
+            self.size = (224, 244)
 
         if search_for:
             self.search(subject=search_for, father=father)
