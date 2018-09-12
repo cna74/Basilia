@@ -15,11 +15,12 @@ JSON_ = json.load(open('dumped/bbox_labels_600_hierarchy.json'))['Subcategory']
 
 class Finder:
 
-    def __init__(self, search_for=None, father=False):
+    def __init__(self, search_for=None, father=False, size=(224, 224)):
         self.classes = []
         self.dirs = []
         self.images_as_array = []
         self.images = None
+        self.size = size
 
         if search_for:
             self.search(subject=search_for, father=father)
@@ -68,18 +69,22 @@ class Finder:
         return set(self.classes)
 
     def full_result(self, size=(224, 224)):
-        return self._get_img_arrays(self.images, size=size)
+        return self._get_img_arrays_with_bboxes(self.images, size=size)
 
-    def bbox_test(self):
+    def bbox_test(self, size=None):
+        if not size:
+            size = self.size
+
         self.fill_images()
         idx = list(set((i[0] for i in self.images.itertuples())))
 
         choices = np.random.choice(len(idx), 4, replace=False)
-        result = [idx[i] for i in choices]
-        imgs = self._get_img_arrays(result)
+        selected_imgs = [idx[i] for i in choices]
+        imgs_and_bbox = self._get_img_arrays_with_bboxes(selected_imgs)
 
-        for idx, img in enumerate(imgs):
+        for idx, data in enumerate(imgs_and_bbox):
             plt.subplot(2, 2, idx + 1)
+            img = self._draw(data[0], data[1], size)
             plt.imshow(img)
             plt.axis('off')
         plt.show()
@@ -101,30 +106,43 @@ class Finder:
                 elif 'Part' in i.keys():
                     self._dig(i['Part'])
 
-    def _get_img_arrays(self, imgs, size=(224, 224)) -> list:
-        images_as_array = []
+    def _draw(self, img: np.ndarray, bboxes: np.ndarray, size: tuple):
+        bboxes = np.multiply(size[0], bboxes.astype(np.float))
+        bboxes = bboxes.astype(np.uint8)
+
+        for i in bboxes:
+            img = cv2.rectangle(img, (i[0], i[2]), (i[1], i[3]), (0, 0, 255))
+        return img
+
+    def _get_img_arrays_with_bboxes(self, imgs, size=(224, 224)) -> list:
+        # get image path
+        images_and_bboxes = []
         for dir_ in IMG_DIRS:
             for img in imgs:
                 if img == dir_[9:-4]:
-                    self.dirs.append(dir_)
+                    tmp = [dir_, ]
+                    bboxes = self.images.loc[[img], ['XMin', 'XMax', 'YMin', 'YMax']]
+                    bboxes = bboxes.values
+                    tmp.append(bboxes)
+                    self.dirs.append(tmp)
 
         dst = os.path.join(dumper.DATA_DIR, 'Train/train_0{}.zip')
-        zip_numbers = set([i[7:8] for i in self.dirs])
+        zip_numbers = set([i[0][7:8] for i in self.dirs])
 
+        # read image as np.ndarray
         for file in zip_numbers:
             for dir_ in self.dirs:
-                if dir_[7:8] == file:
+                if dir_[0][7:8] == file:
                     with ZipFile(dst.format(file)) as zip_:
-                        with zip_.open(dir_) as image:
-                            im = np.asarray(Image.open(image))
+                        with zip_.open(dir_[0]) as image:
+                            img = np.asarray(Image.open(image))
                             if size:
-                                im = cv2.resize(im, size)
-                            images_as_array.append(im)
-        return images_as_array
+                                img = cv2.resize(img, size)
+                            tmp = [img, dir_[1]]
+                            images_and_bboxes.append(tmp)
+        return images_and_bboxes
 
 
-finder = Finder('Apple')
-# print(finder.classes)
-# print(finder.convert())
-finder.bbox_test()
-# print(len(finder.images))
+if __name__ == '__main__':
+    finder = Finder('Food')
+    finder.bbox_test()
