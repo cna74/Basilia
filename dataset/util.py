@@ -1,39 +1,43 @@
 import matplotlib.pyplot as plt
 from zipfile import ZipFile
+from dataset import dumper
+from math import sqrt
 from PIL import Image
+import pandas as pd
 import numpy as np
-import dumper
 import json
 import cv2
+import sys
 import os
 
 LABELS = dumper.label_loader()
 BBOX = dumper.bbox_loader()
 IMG_DIRS = dumper.img_loader()
-JSON_ = json.load(open('dumped/bbox_labels_600_hierarchy.json'))['Subcategory']
+JSON_ = json.load(open('{}/dataset/dumped/bbox_labels_600_hierarchy.json'
+                       .format(os.path.split(__file__)[0])))['Subcategory']
 
 
 class Finder:
 
     def __init__(self, search_for=None, father=False, size=None):
-        self.classes = []
+        self.search_result = []
         self.dirs = []
-        self.images_as_array = []
-        self.images = None
+        self._images_with_bbox = None
+        self._image_df = pd.DataFrame({i: [] for i in BBOX.columns.values})
 
         if not size:
-            print("size = (224, 224) as default")
+            sys.stdout.write("size = (224, 224) as default")
             self.size = (224, 244)
 
         if search_for:
             self.search(subject=search_for, father=father)
 
     def __add__(self, other):
-        return self.classes + other.classes
+        return self.search_result + other.search_result
 
-    def fill_images(self):
-        for i in self.classes:
-            self.images = BBOX.loc[BBOX['LabelName'] == i]
+    @staticmethod
+    def list_of_classes() -> set:
+        return set([i[0] for i in LABELS.itertuples()])
 
     @staticmethod
     def mid_to_string(mid_or_name) -> str:
@@ -46,14 +50,29 @@ class Finder:
             sel = sel.to_dict()
             return sel['code']
 
-    def search(self, subject, list_=None, father=False) -> set:
+    @staticmethod
+    def _draw(img: np.ndarray, bboxes: np.ndarray, size: tuple) -> np.ndarray:
+        bboxes = np.multiply(size[0], bboxes.astype(np.float))
+        bboxes = bboxes.astype(np.uint8)
+
+        for i in bboxes:
+            img = cv2.rectangle(img=img, pt1=(i[0], i[2]), pt2=(i[1], i[3]), color=(0, 0, 255), thickness=2)
+        return img
+
+    @property
+    def imgs_with_bbox(self):
+        if len(self._images_with_bbox) == 0:
+            self._fill_images_with_bbox()
+        return self._images_with_bbox
+
+    def search(self, subject, list_=None, father=False):
         if not list_:
-            self.classes = []
+            self.search_result = []
             list_ = JSON_
 
         for i in list_:
             if i['LabelName'] == self.mid_to_string(subject):
-                self.classes.append(i['LabelName'])
+                self.search_result.append(i['LabelName'])
                 if len(i.keys()) > 1:
                     if 'Subcategory' in i.keys():
                         self._dig(i['Subcategory'])
@@ -62,69 +81,63 @@ class Finder:
 
             elif len(i.keys()) > 1:
                 if 'Subcategory' in i.keys():
-                    self.search(subject, i['Subcategory'])
+                    self.search(subject=subject, list_=i['Subcategory'], father=father)
                 elif 'Part' in i.keys():
-                    self.search(subject, i['Part'])
+                    self.search(subject=subject, list_=i['Part'], father=father)
 
-        if not father and self.mid_to_string(subject) in self.classes and len(self.classes) > 1:
-            self.classes.remove(self.mid_to_string(subject))
+        if not father and self.mid_to_string(subject) in self.search_result and len(self.search_result) > 1:
+            self.search_result.remove(self.mid_to_string(subject))
 
-        return set(self.classes)
-
-    def full_result(self, size=(224, 224)):
-        return self._get_img_arrays_with_bboxes(self.images, size=size)
-
-    def bbox_test(self, size=None):
+    def bbox_test(self, size=None, many=16):
         if not size:
             size = self.size
 
-        self.fill_images()
-        idx = list(set((i[0] for i in self.images.itertuples())))
+        self._fill_images()
+        idx = list(set((i[1] for i in self._image_df.itertuples())))
 
-        choices = np.random.choice(len(idx), 4, replace=False)
+        choices = np.random.choice(len(idx), many, replace=False)
         selected_imgs = [idx[i] for i in choices]
         imgs_and_bbox = self._get_img_arrays_with_bboxes(selected_imgs)
 
         for idx, data in enumerate(imgs_and_bbox):
-            plt.subplot(2, 2, idx + 1)
+            plt.subplot(sqrt(many), sqrt(many), idx + 1)
             img = self._draw(data[0], data[1], size)
             plt.imshow(img)
             plt.axis('off')
         plt.show()
 
-    def convert(self, list_=None):
+    def convert(self):
         tmp = []
-        if not list_:
-            list_ = self.classes
-        for i in list_:
+
+        for i in self.search_result:
             tmp.append(self.mid_to_string(i))
-        return tmp
+        return tmp.sort()
+
+    def _fill_images(self):
+        for i in self.search_result:
+            self._image_df = self._image_df.append(BBOX.loc[BBOX['LabelName'] == i])
+
+    def _fill_images_with_bbox(self, size=(224, 224)):
+        self._images_with_bbox = self._get_img_arrays_with_bboxes(self._image_df, size=size)
+        return self._images_with_bbox
 
     def _dig(self, list_):
         for i in list_:
-            self.classes.append(i['LabelName'])
+            self.search_result.append(i['LabelName'])
             if len(i.keys()) > 1:
                 if 'Subcategory' in i.keys():
                     self._dig(i['Subcategory'])
                 elif 'Part' in i.keys():
                     self._dig(i['Part'])
 
-    def _draw(self, img: np.ndarray, bboxes: np.ndarray, size: tuple):
-        bboxes = np.multiply(size[0], bboxes.astype(np.float))
-        bboxes = bboxes.astype(np.uint8)
-
-        for i in bboxes:
-            img = cv2.rectangle(img, (i[0], i[2]), (i[1], i[3]), (0, 0, 255))
-        return img
-
-    def _get_img_arrays_with_bboxes(self, imgs, size=(224, 224)) -> list:
+    def _get_img_arrays_with_bboxes(self, imgs, size=(224, 224)) -> np.ndarray:
         # get image path
         images_and_bboxes = []
         for dir_ in IMG_DIRS:
             for img in imgs:
                 if img == dir_[9:-4]:
                     tmp = [dir_, ]
-                    bboxes = self.images.loc[[img], ['XMin', 'XMax', 'YMin', 'YMax']]
+                    bboxes = self._image_df.loc[self._image_df['ImageID'] == img, ['XMin', 'XMax', 'YMin', 'YMax']]
                     bboxes = bboxes.values
                     tmp.append(bboxes)
                     self.dirs.append(tmp)
@@ -143,9 +156,10 @@ class Finder:
                                 img = cv2.resize(img, size)
                             tmp = [img, dir_[1]]
                             images_and_bboxes.append(tmp)
-        return images_and_bboxes
+        return np.array(images_and_bboxes)
 
 
 if __name__ == '__main__':
-    finder = Finder('Food')
-    finder.bbox_test()
+    pass
+    # finder = Finder('Food')
+    # finder.bbox_test()
