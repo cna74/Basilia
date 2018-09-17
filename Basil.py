@@ -1,4 +1,4 @@
-from dataset import (util, dumper)
+from dataset import dumper, util
 
-Finder = util.Finder
 DumpHandler = dumper
+Finder = util.Finder
