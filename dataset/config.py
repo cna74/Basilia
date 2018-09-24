@@ -1,0 +1,1 @@
+DATA_DIR = '/media/cna/backpack/dataset/Open_Image/'
