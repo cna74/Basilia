@@ -1,5 +1,4 @@
 import numpy.core.defchararray as char
-from collections import OrderedDict
 import matplotlib.pyplot as plt
 from zipfile import ZipFile
 from dataset import dumper
@@ -17,9 +16,9 @@ LABELS = dumper.label_loader()
 # BBOX = dumper.bbox_loader() # call this when you really need it, it's Huge
 IMG_DIRS = dumper.img_loader()
 JSON_ = json.load(open('{}/dumped/bbox_labels_600_hierarchy.json'.format(os.path.split(__file__)[0])))['Subcategory']
-headers = OrderedDict({0: 'ImageID', 1: 'Source', 2: 'LabelName', 3: 'Confidence',
-                       4: 'XMin', 5: 'XMax', 6: 'YMin', 7: 'YMax', 8: 'IsOccluded',
-                       9: 'IsTruncated', 10: 'IsGroupOf', 11: 'IsDepiction', 12: 'IsInside'})
+headers = {0: 'ImageID', 1: 'Source', 2: 'LabelName', 3: 'Confidence',
+           4: 'XMin', 5: 'XMax', 6: 'YMin', 7: 'YMax', 8: 'IsOccluded',
+           9: 'IsTruncated', 10: 'IsGroupOf', 11: 'IsDepiction', 12: 'IsInside'}
 
 
 class Finder:
@@ -215,5 +214,5 @@ class Finder:
 if __name__ == '__main__':
     finder = Finder('Fruit', size=(224, 224))
     finder.bbox_test(n=4)
-    # print(finder._fill_images_with_bbox()[:10])
+    # print(finder._fill_images_with_bbox())
     pass
