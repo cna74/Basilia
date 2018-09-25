@@ -1,21 +1,25 @@
 import numpy.core.defchararray as char
+from collections import OrderedDict
 import matplotlib.pyplot as plt
 from zipfile import ZipFile
 from dataset import dumper
+from dataset import config
 from PIL import Image
 import pandas as pd
 import numpy as np
 import progressbar
-import time
 import json
 import cv2
 import sys
 import os
 
 LABELS = dumper.label_loader()
-# BBOX = dumper.bbox_loader() call this when you really need it, it's Huge
+# BBOX = dumper.bbox_loader() # call this when you really need it, it's Huge
 IMG_DIRS = dumper.img_loader()
 JSON_ = json.load(open('{}/dumped/bbox_labels_600_hierarchy.json'.format(os.path.split(__file__)[0])))['Subcategory']
+headers = OrderedDict({0: 'ImageID', 1: 'Source', 2: 'LabelName', 3: 'Confidence',
+                       4: 'XMin', 5: 'XMax', 6: 'YMin', 7: 'YMax', 8: 'IsOccluded',
+                       9: 'IsTruncated', 10: 'IsGroupOf', 11: 'IsDepiction', 12: 'IsInside'})
 
 
 class Finder:
@@ -23,8 +27,7 @@ class Finder:
     def __init__(self, search_for=None, size=None, father=False):
         self.search_result = []
         self._images_with_bbox = []
-        self._image_df = pd.DataFrame({i: [] for i in ['ImageID', 'LabelName',
-                                                       'XMin', 'XMax', 'YMin', 'YMax', 'IsGroupOf']})
+        self._image_df = pd.DataFrame({headers.get(i): [] for i in config.DF_COLS})
 
         if not size:
             sys.stdout.write("size = (224, 224) as default")
@@ -173,9 +176,7 @@ class Finder:
     def _replace_path_with_img(self, images_and_bboxes, size: tuple=None, is_test=False):
         if not size:
             size = self.size
-
-        if is_test:
-            test = []
+        test = []
 
         dst = os.path.join(dumper.DATA_DIR, 'Train/{}.zip')
         zip_name = np.unique([i[:8] for i in images_and_bboxes[:, 0]])
@@ -185,9 +186,10 @@ class Finder:
 
         for folder in zip_name:
             sep = char.partition(un, '/')
-            file_names = sep[np.where(sep[:, 0]==folder)][:, 2]
-            print(folder)
-            for img_dir in file_names:
+            file_names = sep[np.where(sep[:, 0] == folder)][:, 2]
+            sys.stdout.write(folder+'\n')
+            bar = progressbar.ProgressBar()
+            for img_dir in bar(file_names):
                 with ZipFile(dst.format(folder)) as zip_:
                     img_path = os.path.join(folder, img_dir)
                     with zip_.open(img_path+'.jpg') as image:
@@ -195,8 +197,8 @@ class Finder:
                         if size:
                             img = cv2.resize(img, size)
                         if not is_test:
-                            l = len(np.where(images_and_bboxes[:, 0] == img_path))
-                            images_and_bboxes[l, 0] = np.tile(img, (l, 1, 1, 1))
+                            len_ = len(np.where(images_and_bboxes[:, 0] == img_path))
+                            images_and_bboxes[len_, 0] = np.tile(img, (len_, 1, 1, 1))
                         elif is_test:
                             test.append(img)
                             bboxes = images_and_bboxes[np.where(images_and_bboxes[:, 0] == img_path), 1:-1][0]
@@ -211,7 +213,7 @@ class Finder:
 
 
 if __name__ == '__main__':
-    # finder = Finder('Fruit', size=(224, 224))
-    # finder.bbox_test(n=4)
+    finder = Finder('Fruit', size=(224, 224))
+    finder.bbox_test(n=4)
     # print(finder._fill_images_with_bbox()[:10])
     pass
