@@ -187,17 +187,16 @@ class Finder:
             sep = char.partition(un, '/')
             file_names = sep[np.where(sep[:, 0] == folder)][:, 2]
             sys.stdout.write(folder+'\n')
-            bar = progressbar.ProgressBar()
-            for img_dir in bar(file_names):
+            for img_dir in progressbar.progressbar(file_names):
                 with ZipFile(dst.format(folder)) as zip_:
                     img_path = os.path.join(folder, img_dir)
                     with zip_.open(img_path+'.jpg') as image:
                         img = np.asarray(Image.open(image))
-                        if size:
-                            img = cv2.resize(img, size)
+                        img = cv2.resize(img, size)
                         if not is_test:
-                            len_ = len(np.where(images_and_bboxes[:, 0] == img_path))
-                            images_and_bboxes[len_, 0] = np.tile(img, (len_, 1, 1, 1))
+                            fnd = np.where(images_and_bboxes[:, 0] == img_path)[0]
+                            for i in fnd:
+                                images_and_bboxes[i, 0] = img
                         elif is_test:
                             test.append(img)
                             bboxes = images_and_bboxes[np.where(images_and_bboxes[:, 0] == img_path), 1:-1][0]
@@ -213,6 +212,6 @@ class Finder:
 
 if __name__ == '__main__':
     finder = Finder('Fruit', size=(224, 224))
-    finder.bbox_test(n=4)
-    # print(finder._fill_images_with_bbox())
+    # finder.bbox_test(n=4)
+    print(finder._fill_images_with_bbox())
     pass
