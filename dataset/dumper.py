@@ -8,18 +8,19 @@ import sys
 import os
 
 """
-minify and dumped_bbox the origin dataset
+dump the origin dataset's csv files
 """
 
 DUMP_DIR = os.path.split(__file__)[0]
 DATA_DIR = config.DATA_DIR
+DF_COLS = config.DF_COLS
 
 
 def bbox_dumper(dst: str = None):
     sys.stdout.write('dumping bbox\n')
     if not dst:
         dst = os.path.join(DATA_DIR, 'Train/train-annotations-bbox.csv')
-    df = pd.read_csv(dst,  usecols=[0, 2, 4, 5, 6, 7, 10], dtype='str')
+    df = pd.read_csv(dst,  usecols=DF_COLS, dtype='str')
 
     with open('{}/dumped/dumped_bbox'.format(DUMP_DIR), 'wb') as f:
         pickle.dump(df, f)

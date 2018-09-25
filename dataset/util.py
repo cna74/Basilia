@@ -5,6 +5,7 @@ from dataset import dumper
 from PIL import Image
 import pandas as pd
 import numpy as np
+import progressbar
 import time
 import json
 import cv2
@@ -184,8 +185,9 @@ class Finder:
 
         for folder in zip_name:
             sep = char.partition(un, '/')
-            file_name = sep[np.where(sep[:, 0]==folder)][:, 2]
-            for img_dir in file_name:
+            file_names = sep[np.where(sep[:, 0]==folder)][:, 2]
+            print(folder)
+            for img_dir in file_names:
                 with ZipFile(dst.format(folder)) as zip_:
                     img_path = os.path.join(folder, img_dir)
                     with zip_.open(img_path+'.jpg') as image:
@@ -193,15 +195,14 @@ class Finder:
                         if size:
                             img = cv2.resize(img, size)
                         if not is_test:
-                            pass
-                            # TODO Fix it
+                            l = len(np.where(images_and_bboxes[:, 0] == img_path))
+                            images_and_bboxes[l, 0] = np.tile(img, (l, 1, 1, 1))
                         elif is_test:
                             test.append(img)
                             bboxes = images_and_bboxes[np.where(images_and_bboxes[:, 0] == img_path), 1:-1][0]
                             test.append(bboxes)
                             label = images_and_bboxes[np.where(images_and_bboxes[:, 0] == img_path), -1][0]
                             test.append(label)
-
         if is_test:
             test = np.array(test).reshape(-1, 3)
             return test
