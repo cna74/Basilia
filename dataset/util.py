@@ -6,12 +6,14 @@ from dataset import config
 from PIL import Image
 import pandas as pd
 import numpy as np
-import progressbar
+import warnings
+import tqdm
 import json
 import cv2
 import sys
 import os
 
+warnings.simplefilter(action='ignore', category=FutureWarning)
 LABELS = dumper.label_loader()
 # BBOX = dumper.bbox_loader() # call this when you really need it, it's Huge
 IMG_DIRS = dumper.img_loader()
@@ -23,10 +25,10 @@ headers = {0: 'ImageID', 1: 'Source', 2: 'LabelName', 3: 'Confidence',
 
 class Finder:
 
-    def __init__(self, search_for=None, size=None, father=False):
+    def __init__(self, search_for: str=None, size=None, father=False):
         self.search_result = []
-        self._images_with_bbox = []
-        self._image_df = pd.DataFrame({headers.get(i): [] for i in config.DF_COLS})
+        self.images_with_bbox = []
+        self.image_df = pd.DataFrame({headers.get(i): [] for i in config.DF_COLS})
 
         if not size:
             sys.stdout.write("size = (224, 224) as default")
@@ -35,7 +37,7 @@ class Finder:
             self.size = size
 
         if search_for:
-            self.search(subject=search_for, father=father)
+            self.search(subject=search_for.title(), father=father)
 
     def __add__(self, other):
         return self.search_result + other.search_result
@@ -55,11 +57,10 @@ class Finder:
             sel = sel.to_dict()
             return sel['code']
 
-    @property
-    def imgs_with_bbox(self):
-        if len(self._images_with_bbox) == 0:
+    def get_imgs_with_bbox(self):
+        if len(self.images_with_bbox) == 0:
             self._fill_images_with_bbox()
-        return self._images_with_bbox
+        return self.images_with_bbox
 
     def search(self, subject, list_=None, father=False):
         if not list_:
@@ -96,7 +97,7 @@ class Finder:
             size = self.size
 
         self._fill_images()
-        idx = list(set((i[1] for i in self._image_df.itertuples())))
+        idx = list(set((i[1] for i in self.image_df.itertuples())))
 
         choices = np.random.choice(len(idx), n*n, replace=False)
         selected_imgs = [idx[i] for i in choices]
@@ -118,11 +119,11 @@ class Finder:
     def _fill_images(self):
         bbox = dumper.bbox_loader()
         for i in self.search_result:
-            self._image_df = self._image_df.append(bbox.loc[bbox['LabelName'] == i])
+            self.image_df = self.image_df.append(bbox.loc[bbox['LabelName'] == i])
 
     def _fill_images_with_bbox(self, size=(224, 224)):
         self._fill_images()
-        idx = list(set((i[1] for i in self._image_df.itertuples())))
+        idx = list(set((i[1] for i in self.image_df.itertuples())))
         sys.stdout.write('{} unique image\n'.format(len(idx)))
 
         pathes = self._get_imgs_path_with_bboxes(idx)
@@ -162,8 +163,8 @@ class Finder:
 
         for path in selected:
             name = path[9:]
-            result = self._image_df.loc[self._image_df['ImageID'] == name,
-                                        ['XMin', 'XMax', 'YMin', 'YMax', 'LabelName']]
+            result = self.image_df.loc[self.image_df['ImageID'] == name,
+                                       ['XMin', 'XMax', 'YMin', 'YMax', 'LabelName']]
             result = result.values
 
             tmp = np.c_[np.repeat(path, len(result)), result]
@@ -186,10 +187,11 @@ class Finder:
         for folder in zip_name:
             sep = char.partition(un, '/')
             file_names = sep[np.where(sep[:, 0] == folder)][:, 2]
-            sys.stdout.write(folder+'\n')
-            for img_dir in progressbar.progressbar(file_names):
+            for img_dir in tqdm.tqdm(file_names, ascii=True, desc=folder):
                 with ZipFile(dst.format(folder)) as zip_:
                     img_path = os.path.join(folder, img_dir)
+                    if sys.platform == 'win32':
+                        img_path = img_path.replace('\\', '/')
                     with zip_.open(img_path+'.jpg') as image:
                         img = np.asarray(Image.open(image))
                         img = cv2.resize(img, size)
@@ -211,7 +213,7 @@ class Finder:
 
 
 if __name__ == '__main__':
-    finder = Finder('Fruit', size=(224, 224))
+    finder = Finder('apple', size=(224, 224))
     # finder.bbox_test(n=4)
-    print(finder._fill_images_with_bbox())
+    np.save('apples', finder.get_imgs_with_bbox())
     pass

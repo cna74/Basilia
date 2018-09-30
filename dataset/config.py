@@ -1,4 +1,11 @@
-DATA_DIR = '/media/cna/backpack/dataset/Open_Image/'
+import sys
+
+
+if sys.platform == 'linux':
+    DATA_DIR = '/media/cna/backpack/dataset/Open_Image/'
+elif sys.platform == 'win32':
+    DATA_DIR = 'E:/dataset/Open_Image/'
+
 """
 DATASET Directory
 """
