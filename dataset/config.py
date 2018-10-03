@@ -1,16 +1,15 @@
 import sys
 
 
+"""
+DATASET Directory
+"""
 if sys.platform == 'linux':
     DATA_DIR = '/media/cna/backpack/dataset/Open_Image/'
 elif sys.platform == 'win32':
     DATA_DIR = 'E:/dataset/Open_Image/'
 
-"""
-DATASET Directory
-"""
 
-DF_COLS = (0, 2, 4, 5, 6, 7, 10)
 """
 DF_COLS:
 0 ImageID       ***
@@ -30,3 +29,5 @@ DF_COLS:
 i.e ->     ImageID, LabelName, XMin, XMax, YMin, YMax, IsGroupOf
 DF_COLS = (0,       2,         4,    5,    6,    7,    10)
 """
+DF_COLS = (0, 2, 4, 5, 6, 7, 10)
+

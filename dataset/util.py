@@ -43,8 +43,8 @@ class Finder:
         return self.search_result + other.search_result
 
     @staticmethod
-    def list_of_classes() -> set:
-        return set([i[0] for i in LABELS.itertuples()])
+    def list_of_classes() -> list:
+        return list(set([i[0] for i in LABELS.itertuples()]))
 
     @staticmethod
     def mid_to_string(mid_or_name) -> str:
@@ -59,7 +59,7 @@ class Finder:
 
     def get_imgs_with_bbox(self):
         if len(self.images_with_bbox) == 0:
-            self._fill_images_with_bbox()
+            self.images_with_bbox = self._fill_images_with_bbox()
         return self.images_with_bbox
 
     def search(self, subject, list_=None, father=False):
@@ -199,6 +199,7 @@ class Finder:
                             fnd = np.where(images_and_bboxes[:, 0] == img_path)[0]
                             for i in fnd:
                                 images_and_bboxes[i, 0] = img
+
                         elif is_test:
                             test.append(img)
                             bboxes = images_and_bboxes[np.where(images_and_bboxes[:, 0] == img_path), 1:-1][0]
@@ -209,11 +210,14 @@ class Finder:
             test = np.array(test).reshape(-1, 3)
             return test
         else:
+            labels = np.unique(images_and_bboxes[:, -1])
+            for i in labels:
+                images_and_bboxes[np.where(images_and_bboxes[:, -1] == i), -1] = self.mid_to_string(i)
             return images_and_bboxes
 
 
 if __name__ == '__main__':
-    finder = Finder('apple', size=(224, 224))
+    # finder = Finder('apple', size=(224, 224))
     # finder.bbox_test(n=4)
-    np.save('apples', finder.get_imgs_with_bbox())
+    # np.save('apples', finder.get_imgs_with_bbox())
     pass

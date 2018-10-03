@@ -4,6 +4,7 @@
       <w>bboxes</w>
       <w>dataset</w>
       <w>imgs</w>
+      <w>tqdm</w>
     </words>
   </dictionary>
 </component>
