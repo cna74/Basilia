@@ -11,3 +11,7 @@ https://www.figure-eight.com/dataset/open-images-annotated-with-bounding-boxes/
 
 ### image directories
 <img src="https://github.com/cna74/Basil/blob/master/image/image_dir.png">
+
+- [x] search in dataset :eyes:
+- [x] read results from zipfile as ndarray
+- [ ] dump images and bboxes 
