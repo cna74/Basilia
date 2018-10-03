@@ -187,7 +187,7 @@ class Finder:
         for folder in zip_name:
             sep = char.partition(un, '/')
             file_names = sep[np.where(sep[:, 0] == folder)][:, 2]
-            for img_dir in tqdm.tqdm(file_names, ascii=True, desc=folder):
+            for img_dir in tqdm.tqdm(file_names, desc=folder, ncols=100):
                 with ZipFile(dst.format(folder)) as zip_:
                     img_path = os.path.join(folder, img_dir)
                     if sys.platform == 'win32':

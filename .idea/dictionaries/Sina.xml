@@ -6,6 +6,8 @@
       <w>imgs</w>
       <w>ndarray</w>
       <w>tqdm</w>
+      <w>xnor</w>
+      <w>yolo</w>
     </words>
   </dictionary>
 </component>

@@ -14,4 +14,6 @@ https://www.figure-eight.com/dataset/open-images-annotated-with-bounding-boxes/
 
 - [x] search in dataset :eyes:
 - [x] read results from zipfile as ndarray
-- [ ] dump images and bboxes 
+- [ ] use multi-processing to speed up
+- [ ] dump images and bboxes
+- [ ] train a model with YOLO or Xnor-net
