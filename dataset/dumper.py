@@ -77,14 +77,16 @@ def label_loader(dst: str = None) -> pd.DataFrame:
         return pickle.load(f)
 
 
-if not os.path.exists(os.path.join(DUMP_DIR, 'dumped/bbox_labels_600_hierarchy.json')):
-    raise FileNotFoundError('MISSING bbox_labels_600_hierarchy.json')
-if not os.path.exists(os.path.join(DUMP_DIR, 'dumped/dumped_bbox')):
-    bbox_dumper()
-if not os.path.exists(os.path.join(DUMP_DIR, 'dumped/dumped_img_dirs')):
-    img_dumper()
-if not os.path.exists(os.path.join(DUMP_DIR, 'dumped/dumped_labels')):
-    label_dumper()
+def check_requirements():
+    if not os.path.exists(os.path.join(DUMP_DIR, 'dumped/bbox_labels_600_hierarchy.json')):
+        raise FileNotFoundError('MISSING bbox_labels_600_hierarchy.json')
+    if not os.path.exists(os.path.join(DUMP_DIR, 'dumped/dumped_bbox')):
+        bbox_dumper()
+    if not os.path.exists(os.path.join(DUMP_DIR, 'dumped/dumped_img_dirs')):
+        img_dumper()
+    if not os.path.exists(os.path.join(DUMP_DIR, 'dumped/dumped_labels')):
+        label_dumper()
+
 
 if __name__ == '__main__':
     # bbox_dumper()

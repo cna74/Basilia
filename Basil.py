@@ -1,4 +1,3 @@
-from dataset import dumper, util
+from dataset import util
 
-DumpHandler = dumper
 Finder = util.Finder
