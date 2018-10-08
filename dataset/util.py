@@ -13,6 +13,7 @@ import cv2
 import sys
 import os
 
+
 # region checkers
 warnings.simplefilter(action='ignore', category=FutureWarning)
 dumper.check_requirements()
@@ -32,7 +33,10 @@ headers = {0: 'ImageID', 1: 'Source', 2: 'LabelName', 3: 'Confidence',
 class Finder:
 
     def __init__(self, search_for: str=None, size=(224, 224), father=False, address=None):
+        # MID
         self.__search_result = []
+        # Str
+        self.search_result = []
         self.images_with_bbox = []
         self.image_df = pd.DataFrame({headers.get(i): [] for i in config.DF_COLS})
 
@@ -40,28 +44,27 @@ class Finder:
             self.address = join(split(__name__)[0], 'data')
             if not exists(self.address):
                 os.makedirs(self.address)
-            sys.stdout.write('images will export to {}\n'.format(self.address))
-
         else:
             self.address = address
 
         self.size = size
 
         if search_for:
-            self.search(subject=search_for.title(), father=father)
+            self.search(subject=search_for.capitalize(), father=father)
+            self.fill_search_result()
 
+        sys.stdout.write('images will export to {}\n'.format(self.address))
         sys.stdout.flush()
 
     @property
     def list_of_all_classes(self) -> list:
         return list(set([i[0] for i in LABELS.itertuples()]))
 
-    @property
-    def search_result(self) -> set:
+    def fill_search_result(self):
         tmp = []
         for i in self.__search_result:
             tmp.append(self.mid_to_string(i))
-        return set(tmp)
+        self.search_result = set(tmp)
 
     @staticmethod
     def mid_to_string(mid_or_name) -> str:
@@ -74,6 +77,10 @@ class Finder:
             sel = sel.to_dict()
             return sel['code']
 
+    def restore(self, dst):
+        self.images_with_bbox: np.ndarray = np.load(dst)
+        self.search_result = np.unique(self.images_with_bbox[:, label_slice])
+
     def fill_images_with_bbox(self):
         if len(self.images_with_bbox) == 0:
             self._extract_data_frame()
@@ -84,9 +91,10 @@ class Finder:
             sys.stdout.write('{} unique object\n'.format(paths.shape[0]))
             sys.stdout.flush()
 
-            self.images_with_bbox = self._replace_path_with_img(paths, self.size)
+            self._replace_path_with_img(paths, self.size)
 
     def store_data(self):
+        np.save('data', self.images_with_bbox)
         with open(join(self.address, 'bbox'), 'w') as file:
             for dir_ in self.search_result:
                 label_folder = join(self.address, dir_)
@@ -110,6 +118,7 @@ class Finder:
                         file.write('{}{}{}{}{}{}\n'.format(name.ljust(7), *[str(i).ljust(10) for i in bbox], dir_))
 
     def search(self, subject, list_=None, father=False):
+        subject = subject.capitalize()
         if not list_:
             self.__search_result = []
             list_ = JSON_
@@ -239,8 +248,8 @@ class Finder:
 
                         if not is_test:
                             fnd = np.where(paths_and_bboxes[:, 1] == img_path)[0]
-                            for i in fnd:
-                                paths_and_bboxes[i, 1] = img
+                            # replace first one with image
+                            paths_and_bboxes[fnd[0], 1] = img
 
                         elif is_test:
                             test.append(img)
@@ -248,11 +257,12 @@ class Finder:
                             test.append(bboxes)
                             label = paths_and_bboxes[np.where(paths_and_bboxes[:, 1] == img_path), -1][0]
                             test.append(label)
+
         if is_test:
             test = np.array(test).reshape(-1, 3)
             return test
         else:
-            return paths_and_bboxes
+            self.images_with_bbox = paths_and_bboxes
 
 
 if __name__ == '__main__':
