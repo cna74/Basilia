@@ -1,14 +1,15 @@
 from os.path import split, join, exists
 import numpy.core.defchararray as char
-from dataset import config, dumper
 import matplotlib.pyplot as plt
 from zipfile import ZipFile
+import multiprocessing
 from PIL import Image
 import pandas as pd
 import numpy as np
 import warnings
+import config
+import dumper
 import tqdm
-import json
 import cv2
 import sys
 import os
@@ -19,7 +20,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 dumper.check_requirements()
 LABELS = dumper.label_loader()
 IMG_DIRS = dumper.img_loader()
-JSON_ = json.load(open('{}/dumped/bbox_labels_600_hierarchy.json'.format(split(__file__)[0])))['Subcategory']
+JSON_ = dumper.json_loader()
 id_slice = 0
 img_slice = 1
 bbox_slice = slice(2, 6)
@@ -32,12 +33,14 @@ headers = {0: 'ImageID', 1: 'Source', 2: 'LabelName', 3: 'Confidence',
 
 class Finder:
 
-    def __init__(self, search_for: str=None, size=(224, 224), father=False, address=None):
+    def __init__(self, search_for: str=None, size=(224, 224), etc=False, just=False, address=None):
         # MID
         self.__search_result = []
         # Str
         self.search_result = []
-        self.images_with_bbox = []
+        self.etc = etc
+        self.just = just
+        self.images_with_bbox = np.delete(np.empty((1, len(config.DF_COLS))), 0, 0)
         self.image_df = pd.DataFrame({headers.get(i): [] for i in config.DF_COLS})
 
         if not address:
@@ -50,7 +53,7 @@ class Finder:
         self.size = size
 
         if search_for:
-            self.search(subject=search_for.capitalize(), father=father)
+            self.search(subject=search_for.capitalize(), etc=self.etc, just=self.just)
             self.fill_search_result()
 
         sys.stdout.write('images will export to {}\n'.format(self.address))
@@ -59,12 +62,6 @@ class Finder:
     @property
     def list_of_all_classes(self) -> list:
         return list(set([i[0] for i in LABELS.itertuples()]))
-
-    def fill_search_result(self):
-        tmp = []
-        for i in self.__search_result:
-            tmp.append(self.mid_to_string(i))
-        self.search_result = set(tmp)
 
     @staticmethod
     def mid_to_string(mid_or_name) -> str:
@@ -77,6 +74,12 @@ class Finder:
             sel = sel.to_dict()
             return sel['code']
 
+    def fill_search_result(self):
+        tmp = []
+        for i in self.__search_result:
+            tmp.append(self.mid_to_string(i))
+        self.search_result = set(tmp)
+
     def restore(self, dst):
         self.images_with_bbox: np.ndarray = np.load(dst)
         self.search_result = np.unique(self.images_with_bbox[:, label_slice])
@@ -84,14 +87,35 @@ class Finder:
     def fill_images_with_bbox(self):
         if len(self.images_with_bbox) == 0:
             self._extract_data_frame()
+
             idx = list(set((i[1] for i in self.image_df.itertuples())))
             sys.stdout.write('{} unique image\n'.format(len(idx)))
-
-            paths = self._get_imgs_path_with_bboxes(idx)
-            sys.stdout.write('{} unique object\n'.format(paths.shape[0]))
             sys.stdout.flush()
 
-            self._replace_path_with_img(paths, self.size)
+            self._get_imgs_path_with_bboxes(idx)
+            sys.stdout.write('{} unique object\n'.format(self.images_with_bbox.shape[0]))
+            sys.stdout.flush()
+
+            zip_name = np.unique([i[:8] for i in self.images_with_bbox[:, 1]])
+            p = multiprocessing.Pool(multiprocessing.cpu_count())
+            out = p.map(func=self._replace_path_with_img, iterable=zip_name)
+            p.close()
+            p.join()
+            
+            idx, imgs = np.array([]), np.array([])
+            for idxs, imgs_ in out:
+                idx = np.append(idx, idxs)
+                imgs = np.append(imgs, imgs_)
+                
+            idx = idx.astype(int)
+            imgs = imgs.reshape((-1, self.size[0], self.size[1], 3)).astype(np.uint8)
+            
+            for i, j in zip(idx, imgs):
+                self.images_with_bbox[i, 1] = j
+                
+        else:
+            sys.stdout.write("it's already filled\n")
+            sys.stdout.flush()
 
     def store_data(self):
         np.save('data', self.images_with_bbox)
@@ -117,7 +141,31 @@ class Finder:
                     for bbox in bboxes:
                         file.write('{}{}{}{}{}{}\n'.format(name.ljust(7), *[str(i).ljust(10) for i in bbox], dir_))
 
-    def search(self, subject, list_=None, father=False):
+    def bbox_test(self, size=None, n: int=4):
+        if not size:
+            size = self.size
+
+        choose = np.unique(self.images_with_bbox[:, 0])
+        choices = np.random.choice(len(choose), n*n, replace=False)
+
+        plt.figure(figsize=(10, 10))
+        for idx, choice in enumerate(choices, start=1):
+            data = self.images_with_bbox[np.where(self.images_with_bbox[:, 0] == choice)]
+            img = data[0, 1]
+            bboxes = data[:, bbox_slice]
+            titles = set(data[:, -1])
+            plt.subplot(n, n, idx)
+            img = self._draw(img, bboxes, size)
+            plt.imshow(img)
+            plt.title(', '.join(titles))
+            plt.axis('off')
+        plt.show()
+
+    def search(self, subject, etc, just):
+        self._search_step1(subject)
+        self._search_step2(subject, etc, just)
+
+    def _search_step1(self, subject, list_=None):
         subject = subject.capitalize()
         if not list_:
             self.__search_result = []
@@ -134,36 +182,16 @@ class Finder:
 
             elif len(i.keys()) > 1:
                 if 'Subcategory' in i.keys():
-                    self.search(subject=subject, list_=i['Subcategory'], father=father)
+                    self._search_step1(subject=subject, list_=i['Subcategory'])
                 elif 'Part' in i.keys():
-                    self.search(subject=subject, list_=i['Part'], father=father)
+                    self._search_step1(subject=subject, list_=i['Part'])
 
-        if not father and self.mid_to_string(subject) in self.__search_result and len(self.__search_result) > 1:
-            self.__search_result.remove(self.mid_to_string(subject))
-
-    def bbox_test(self, size=None, n: int=4):
-        if not size:
-            size = self.size
-
-        self._extract_data_frame()
-        idx = list(set((i[1] for i in self.image_df.itertuples())))
-
-        choices = np.random.choice(len(idx), n*n, replace=False)
-        selected_imgs = [idx[i] for i in choices]
-        pathes = self._get_imgs_path_with_bboxes(selected_imgs)
-        imgs_and_bbox = self._replace_path_with_img(pathes, size, True)
-
-        plt.figure(figsize=(10, 10))
-        for idx, data in enumerate(imgs_and_bbox, start=1):
-            img = data[0]
-            bboxes = data[1]
-            titles = set(data[-1])
-            plt.subplot(n, n, idx)
-            img = self._draw(img, bboxes, size)
-            plt.imshow(img)
-            plt.title(', '.join(titles))
-            plt.axis('off')
-        plt.show()
+    def _search_step2(self, subject, etc, just):
+        if not just:
+            if not etc and self.mid_to_string(subject) in self.__search_result and len(self.__search_result) > 1:
+                self.__search_result.remove(self.mid_to_string(subject))
+        else:
+            self.__search_result = [self.mid_to_string(subject), ]
 
     def _extract_data_frame(self):
         bbox_df = dumper.bbox_loader()
@@ -189,8 +217,8 @@ class Finder:
         return img
 
     # noinspection PyTypeChecker
-    def _get_imgs_path_with_bboxes(self, imgs_id) -> np.ndarray:
-        path_and_bboxes = []
+    def _get_imgs_path_with_bboxes(self, imgs_id):
+        # path_and_bboxes = []
 
         # split image dirs string and fetch names
         img_names = char.partition(IMG_DIRS, '/')[:, 2]
@@ -210,62 +238,57 @@ class Finder:
                         np.repeat(path, len(result)),
                         result]
 
-            path_and_bboxes.extend(tmp)
+            self.images_with_bbox = np.append(self.images_with_bbox, tmp)
 
-        path_and_bboxes = np.array(path_and_bboxes)
+        self.images_with_bbox = self.images_with_bbox.reshape((-1, len(config.DF_COLS)))
+        # path_and_bboxes = np.array(path_and_bboxes)
 
         # convert labels
-        for i in np.unique(path_and_bboxes[:, -1]):
-            path_and_bboxes[np.where(path_and_bboxes[:, -1] == i), -1] = self.mid_to_string(i)
+        for i in np.unique(self.images_with_bbox[:, -1]):
+            self.images_with_bbox[np.where(self.images_with_bbox[:, -1] == i), -1] = self.mid_to_string(i)
 
         # reformat bboxes
-        path_and_bboxes[:, bbox_slice] = path_and_bboxes[:, bbox_slice].astype(np.float)
+        self.images_with_bbox[:, bbox_slice] = self.images_with_bbox[:, bbox_slice].astype(np.float)
 
-        return path_and_bboxes
+        # return path_and_bboxes
 
-    def _replace_path_with_img(self, paths_and_bboxes, size: tuple=None, is_test=False):
+    def _replace_path_with_img(self, zip_name, size: tuple=None):
         if not size:
             size = self.size
-        test = []
-
+        idx = np.array([])
+        imgs = np.array([])
+        
         dst = join(dumper.DATA_DIR, 'Train/{}.zip')
-        zip_name = np.unique([i[:8] for i in paths_and_bboxes[:, 1]])
 
-        un = np.unique(paths_and_bboxes[:, 1])
+        un = np.unique(self.images_with_bbox[:, 1])
         un = un.astype(np.str)
 
-        for folder in zip_name:
-            sep = char.partition(un, '/')
-            file_names = sep[np.where(sep[:, 0] == folder)][:, 2]
-            for img_dir in tqdm.tqdm(file_names, desc=folder, ncols=100):
-                with ZipFile(dst.format(folder)) as zip_:
-                    img_path = join(folder, img_dir)
-                    if sys.platform == 'win32':
-                        img_path = img_path.replace('\\', '/')
-                    with zip_.open(img_path+'.jpg') as image:
-                        img = np.asarray(Image.open(image))
-                        img = cv2.resize(img, size)
+        sep = char.partition(un, '/')
+        file_names = sep[np.where(sep[:, 0] == zip_name)][:, 2]
+        for img_dir in tqdm.tqdm(file_names, desc=zip_name, ncols=100):
+            with ZipFile(dst.format(zip_name)) as zip_:
+                img_path = join(zip_name, img_dir)
+                if sys.platform == 'win32':
+                    img_path = img_path.replace('\\', '/')
+                with zip_.open(img_path+'.jpg') as image:
+                    img = np.asarray(Image.open(image))
+                    img = cv2.resize(img, size)
 
-                        if not is_test:
-                            fnd = np.where(paths_and_bboxes[:, 1] == img_path)[0]
-                            # replace first one with image
-                            paths_and_bboxes[fnd[0], 1] = img
+                    fnd = np.where(self.images_with_bbox[:, 1] == img_path)[0][0]
+                    idx = np.append(idx, fnd)
+                    imgs = np.append(imgs, img)
 
-                        elif is_test:
-                            test.append(img)
-                            bboxes = paths_and_bboxes[np.where(paths_and_bboxes[:, 1] == img_path), bbox_slice][0]
-                            test.append(bboxes)
-                            label = paths_and_bboxes[np.where(paths_and_bboxes[:, 1] == img_path), -1][0]
-                            test.append(label)
-
-        if is_test:
-            test = np.array(test).reshape(-1, 3)
-            return test
-        else:
-            self.images_with_bbox = paths_and_bboxes
+        return idx, imgs
 
 
 if __name__ == '__main__':
+    import time
+    print('start')
     finder = Finder('lemon', size=(224, 224))
-    finder.bbox_test(n=3)
+    t1 = time.time()
+    # finder.bbox_test(n=3)
+    finder.fill_images_with_bbox()
+    t2 = time.time()
+    print('multiprocessing took: {}'.format(t2-t1))
+    np.save('lemon', finder.images_with_bbox)
     pass

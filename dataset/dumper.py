@@ -1,9 +1,10 @@
 import numpy.core.defchararray as char
-from dataset import config
 from zipfile import ZipFile
 import pandas as pd
 import numpy as np
 import pickle
+import config
+import json
 import sys
 import os
 
@@ -75,6 +76,11 @@ def label_loader(dst: str = None) -> pd.DataFrame:
         dst = '{}/dumped/dumped_labels'.format(DUMP_DIR)
     with open(dst, 'rb') as f:
         return pickle.load(f)
+
+
+def json_loader():
+    json_ = json.load(open('{}/dumped/bbox_labels_600_hierarchy.json'.format(os.path.split(__file__)[0])))['Subcategory']
+    return json_
 
 
 def check_requirements():
