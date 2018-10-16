@@ -1,7 +1,7 @@
 # Downloading DataSet
 
 - Download Dataset from here
-    [Open-Image](https://www.figure-eight.com/dataset/open-images-annotated-with-bounding-boxes/ "Open-Image")
+[Open-Image](https://www.figure-eight.com/dataset/open-images-annotated-with-bounding-boxes/ "Open-Image")
 
 -  store it like this
 ```
@@ -27,3 +27,7 @@
         ├── validation-annotations-bbox.csv
         └── validation-images.csv
 ```
+
+## install Basilia
+- to get package `git clone https://github.com/cna74/Basilia.git`
+- create a virtual enviornment `virtualenv -p ~/%your-python-path% ElBasil` after replacing python path it should be like this `virtualenv -p ~/anaconda3/bin/python3.6 ElBasil`
