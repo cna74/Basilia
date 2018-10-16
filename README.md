@@ -1,5 +1,3 @@
-[TOC]
-
 # Downloading DataSet
 
 - Download Dataset from here
