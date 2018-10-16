@@ -1,5 +1,6 @@
 from os.path import split, join, exists
 import numpy.core.defchararray as char
+from progressbar import progressbar
 import matplotlib.pyplot as plt
 from zipfile import ZipFile
 import multiprocessing
@@ -9,11 +10,9 @@ import numpy as np
 import warnings
 import config
 import dumper
-import tqdm
 import cv2
 import sys
 import os
-
 
 # region checkers
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -33,13 +32,17 @@ headers = {0: 'ImageID', 1: 'Source', 2: 'LabelName', 3: 'Confidence',
 
 class Finder:
 
-    def __init__(self, search_for: str=None, size=(224, 224), etc=False, just=False, address=None):
+    def __init__(self, subject: str=None, size=(224, 224), etc=False, just=False, address=None):
+        self.subject = subject
+        self.etc = etc
+        self.just = just
+        self.size = size
+
         # MID
         self.__search_result = []
         # Str
         self.search_result = []
-        self.etc = etc
-        self.just = just
+
         self.images_with_bbox = np.delete(np.empty((1, len(config.DF_COLS))), 0, 0)
         self.image_df = pd.DataFrame({headers.get(i): [] for i in config.DF_COLS})
 
@@ -50,10 +53,8 @@ class Finder:
         else:
             self.address = address
 
-        self.size = size
-
-        if search_for:
-            self.search(subject=search_for.capitalize(), etc=self.etc, just=self.just)
+        if subject:
+            self.search(subject=subject.capitalize(), etc=self.etc, just=self.just)
             self.fill_search_result()
 
         sys.stdout.write('images will export to {}\n'.format(self.address))
@@ -118,7 +119,8 @@ class Finder:
             sys.stdout.flush()
 
     def store_data(self):
-        np.save('data', self.images_with_bbox)
+        np.save('{}/{}-[etc={}]-[just={}]'.format(self.address, self.subject, self.etc, self.just),
+                self.images_with_bbox)
         with open(join(self.address, 'bbox'), 'w') as file:
             for dir_ in self.search_result:
                 label_folder = join(self.address, dir_)
@@ -265,7 +267,7 @@ class Finder:
 
         sep = char.partition(un, '/')
         file_names = sep[np.where(sep[:, 0] == zip_name)][:, 2]
-        for img_dir in tqdm.tqdm(file_names, desc=zip_name, ncols=100):
+        for img_dir in progressbar(file_names, prefix=zip_name+'  '):
             with ZipFile(dst.format(zip_name)) as zip_:
                 img_path = join(zip_name, img_dir)
                 if sys.platform == 'win32':
