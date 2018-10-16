@@ -32,7 +32,8 @@ headers = {0: 'ImageID', 1: 'Source', 2: 'LabelName', 3: 'Confidence',
 
 class Finder:
 
-    def __init__(self, subject: str=None, size=(224, 224), etc=False, just=False, address=None):
+    def __init__(self, subject: str=None, size=(224, 224),
+                 etc=False, just=False, address=None):
         self.subject = subject
         self.etc = etc
         self.just = just
@@ -57,12 +58,19 @@ class Finder:
             self.search(subject=subject.capitalize(), etc=self.etc, just=self.just)
             self.fill_search_result()
 
-        sys.stdout.write('images will export to {}\n'.format(self.address))
-        sys.stdout.flush()
+        # sys.stdout.write('images will export to {}\n'.format(self.address))
+        # sys.stdout.flush()
 
     @property
-    def list_of_all_classes(self) -> list:
-        return list(set([i[0] for i in LABELS.itertuples()]))
+    def dict_of_all_classes(self) -> dict:
+        raw = list(set([i[0] for i in LABELS.itertuples()]))
+        classes = {}
+        for j in raw:
+            fnd = Finder(subject=j, etc=True)
+            result = list(fnd.search_result)
+            if not len(result) == 1:
+                classes.update({j: result})
+        return classes
 
     @staticmethod
     def mid_to_string(mid_or_name) -> str:
@@ -85,7 +93,7 @@ class Finder:
         self.images_with_bbox: np.ndarray = np.load(dst)
         self.search_result = np.unique(self.images_with_bbox[:, label_slice])
 
-    def fill_images_with_bbox(self):
+    def fill_images_with_bbox(self, threads=multiprocessing.cpu_count()):
         if len(self.images_with_bbox) == 0:
             self._extract_data_frame()
 
@@ -98,7 +106,7 @@ class Finder:
             sys.stdout.flush()
 
             zip_name = np.unique([i[:8] for i in self.images_with_bbox[:, 1]])
-            p = multiprocessing.Pool(multiprocessing.cpu_count())
+            p = multiprocessing.Pool(threads)
             out = p.map(func=self._replace_path_with_img, iterable=zip_name)
             p.close()
             p.join()
@@ -210,7 +218,7 @@ class Finder:
                     self._dig(i['Part'])
 
     @staticmethod
-    def _draw(img: np.ndarray, bboxes: np.ndarray, size: tuple) -> np.ndarray:
+    def _draw(img: np.ndarray, bboxes: np.ndarray, size: tuple):
         bboxes = np.multiply(size[0], bboxes.astype(np.float))
         bboxes = bboxes.astype(np.uint8)
 
@@ -288,9 +296,9 @@ if __name__ == '__main__':
     print('start')
     finder = Finder('lemon', size=(224, 224))
     t1 = time.time()
-    # finder.bbox_test(n=3)
     finder.fill_images_with_bbox()
     t2 = time.time()
+    # finder.bbox_test(n=3)
     print('multiprocessing took: {}'.format(t2-t1))
-    np.save('lemon', finder.images_with_bbox)
+    # np.save('lemon', finder.images_with_bbox)
     pass
