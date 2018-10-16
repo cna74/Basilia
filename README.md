@@ -29,5 +29,10 @@
 ```
 
 ## install Basilia
-- to get package `git clone https://github.com/cna74/Basilia.git`
-- create a virtual enviornment `virtualenv -p ~/%your-python-path% ElBasil` after replacing python path it should be like this `virtualenv -p ~/anaconda3/bin/python3.6 ElBasil`
+- get package `git clone https://github.com/cna74/Basilia.git`
+- go to  directory `cd Basilia`
+- create a virtual enviornment `virtualenv -p ~/%your-python-path% /%venv dir%/` after replacing python path and venv dir it should be like this `virtualenv -p ~/anaconda3/bin/python3.6 ~/ElBasil`
+- install requirements `pip install -r requierments.txt`
+
+## in action
+- open jupyter `jupyter lab` or `jupyter notebook`
