@@ -36,3 +36,4 @@
 
 ## in action
 - open jupyter `jupyter lab` or `jupyter notebook`
+![](https://github.com/cna74/Basilia/blob/master/Demo.png)
