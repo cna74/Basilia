@@ -32,8 +32,9 @@ headers = {0: 'ImageID', 1: 'Source', 2: 'LabelName', 3: 'Confidence',
 
 class Finder:
 
-    def __init__(self, subject: str=None, size=(224, 224),
-                 etc=False, just=False, address=None):
+    def __init__(self, subject, size=(224, 224),
+                 etc=False, just=False, address=None,
+                 quiet=False):
         self.subject = subject
         self.etc = etc
         self.just = just
@@ -54,12 +55,19 @@ class Finder:
         else:
             self.address = address
 
-        if subject:
+        if subject is str:
             self.search(subject=subject.capitalize(), etc=self.etc, just=self.just)
             self.fill_search_result()
 
-        # sys.stdout.write('images will export to {}\n'.format(self.address))
-        # sys.stdout.flush()
+        elif type(subject) in (list, tuple, set):
+            self.search_result = [str(i).capitalize() for i in subject]
+            self.__search_result = [self.mid_to_string(i) for i in self.search_result]
+
+        if not quiet:
+            sys.stdout.write('images will export to {}\n'.format(self.address))
+            sys.stdout.write('image size {}\n'.format(self.size))
+
+        sys.stdout.flush()
 
     @property
     def dict_of_all_classes(self) -> dict:
@@ -127,7 +135,7 @@ class Finder:
             sys.stdout.flush()
 
     def store_data(self):
-        np.save('{}/{}-[etc={}]-[just={}]'.format(self.address, self.subject, self.etc, self.just),
+        np.save('{}/{}-[etc={}]-[just={}]'.format(self.address, str(self.subject), self.etc, self.just),
                 self.images_with_bbox)
         with open(join(self.address, 'bbox'), 'w') as file:
             for dir_ in self.search_result:
@@ -293,8 +301,7 @@ class Finder:
 
 if __name__ == '__main__':
     import time
-    print('start')
-    finder = Finder('lemon', size=(224, 224))
+    finder = Finder(('cat', 'dog'), size=(224, 224))
     t1 = time.time()
     finder.fill_images_with_bbox()
     t2 = time.time()
