@@ -25,9 +25,7 @@ DF_COLS:
 10 IsGroupOf
 11 IsDepiction
 12 IsInside
-
 i.e ->     ImageID, LabelName, XMin, XMax, YMin, YMax, IsGroupOf
 DF_COLS = (0,       2,         4,    5,    6,    7,    10)
 """
 DF_COLS = (0, 2, 4, 5, 6, 7, 10)
-
