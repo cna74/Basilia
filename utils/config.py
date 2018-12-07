@@ -22,7 +22,7 @@ DF_COLS:
 7 YMax          ***
 8 IsOccluded
 9 IsTruncated
-10 IsGroupOf
+10 IsGroupOf    ***
 11 IsDepiction
 12 IsInside
 i.e ->     ImageID, LabelName, XMin, XMax, YMin, YMax, IsGroupOf

@@ -9,7 +9,7 @@ import sys
 import os
 
 """
-dump the origin dataset's csv files
+dump the origin utils's csv files
 """
 
 DUMP_DIR = os.path.split(__file__)[0]
@@ -30,7 +30,7 @@ def bbox_dumper(dst: str = None):
 def img_dumper(dst: str = None):
     """
     dumps image directories as numpy array
-    :param dst: dataset directory
+    :param dst: utils directory
     """
     sys.stdout.write('dumping image dirs\n')
 

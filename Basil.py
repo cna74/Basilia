@@ -1,10 +1,10 @@
 import sys
 import os
 
-ds = os.path.join(os.getcwd(), 'dataset')
+ds = os.path.join(os.getcwd(), 'utils')
 if ds not in sys.path:
     sys.path.append(ds)
 
-from dataset import util
+from utils import util
 
 Finder = util.Finder
