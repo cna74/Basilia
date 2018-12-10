@@ -1,9 +1,6 @@
 import sys
 
-
-"""
-DATASET Directory
-"""
+DATA_DIR = "FILL THIS IF YOU ARE ON A STUPID MAC !!!"
 if sys.platform == 'linux':
     DATA_DIR = '/media/cna/backpack/dataset/Open_Image/'
 elif sys.platform == 'win32':

@@ -1,105 +1,73 @@
+from os.path import exists, join, split
 import numpy.core.defchararray as char
-from zipfile import ZipFile
+from glob2 import glob
 import pandas as pd
 import numpy as np
-import pickle
 import config
 import json
 import sys
-import os
 
 """
-dump the origin utils's csv files
+dump the origin dataset's csv files
 """
 
-DUMP_DIR = os.path.split(__file__)[0]
+DUMP_DIR = join(split(__file__)[0], "dumped")
 DATA_DIR = config.DATA_DIR
-DF_COLS = config.DF_COLS
 
 
-def bbox_dumper(dst: str = None):
-    sys.stdout.write('dumping bbox\n')
-    if not dst:
-        dst = os.path.join(DATA_DIR, 'Train/train-annotations-bbox.csv')
-    df = pd.read_csv(dst,  usecols=DF_COLS, dtype='str')
+def annotation_loader(folder_name) -> pd.DataFrame:
+    dumped = join(DUMP_DIR, "{}-annotations-bbox".format(folder_name.lower()))
+    if exists(dumped):
+        df = pd.read_pickle(dumped)
+    else:
+        dst = join(DATA_DIR, '{}/{}-annotations-bbox.csv'.format(folder_name, folder_name.lower()))
+        df = pd.read_csv(dst,  usecols=config.DF_COLS, dtype='str')
+        df.to_pickle(dumped)
 
-    with open('{}/dumped/dumped_bbox'.format(DUMP_DIR), 'wb') as f:
-        pickle.dump(df, f)
-
-
-def img_dumper(dst: str = None):
-    """
-    dumps image directories as numpy array
-    :param dst: utils directory
-    """
-    sys.stdout.write('dumping image dirs\n')
-
-    if not dst:
-        dst = os.path.join(DATA_DIR, 'Train/train_0{}.zip')
-    lst = np.array([])
-    for i in range(9):
-        file = dst.format(i)
-        with ZipFile(file, 'r') as zip_:
-            lst = np.append(lst, zip_.namelist()[1:])
-    lst = char.replace(lst, '.jpg', '')
-    with open('{}/dumped/dumped_img_dirs'.format(DUMP_DIR), 'wb') as f:
-        pickle.dump(lst, f)
+    return df
 
 
-def label_dumper(dst: str = None):
-    sys.stdout.write('dumping labels\n')
+def img_dirs() -> pd.DataFrame:
+    dumped = join(DUMP_DIR, "img_dirs.npy")
+    if exists(dumped):
+        dirs = np.load(dumped)
+    else:
+        pathname = config.DATA_DIR+"*/*/*.jpg"
+        if sys.platform == "win32":
+            pathname = pathname.replace("\\", "/")
+        dirs = glob(pathname=pathname)
+        dirs = np.array(dirs)
+        dirs = char.replace(dirs, ".jpg", "")
+        np.save(dumped, dirs)
 
-    if not dst:
-        dst = os.path.join(DATA_DIR, 'class-descriptions-boxable.csv')
-    df = pd.read_csv(dst, dtype='str', names=['code', 'name'], index_col=[1])
-
-    with open('{}/dumped/dumped_labels'.format(DUMP_DIR), 'wb') as f:
-        pickle.dump(df, f)
-
-
-def img_loader(dst: str = None) -> list:
-    if not dst:
-        dst = '{}/dumped/dumped_img_dirs'.format(DUMP_DIR)
-    with open(dst, 'rb') as f:
-        return pickle.load(f)
+    return dirs
 
 
-def bbox_loader(dst: str = None) -> pd.DataFrame:
-    if not dst:
-        dst = '{}/dumped/dumped_bbox'.format(DUMP_DIR)
-    with open(dst, 'rb') as f:
-        return pickle.load(f)
+def label_loader() -> pd.DataFrame:
+    dumped = join(DUMP_DIR, "labels")
+    if exists(dumped):
+        df = pd.read_pickle(dumped)
+    else:
+        dst = join(DATA_DIR, 'class-descriptions-boxable.csv')
+        df = pd.read_csv(dst, dtype='str', names=['code', 'name'], index_col=[1])
+        df.to_pickle(dumped)
 
-
-def label_loader(dst: str = None) -> pd.DataFrame:
-    if not dst:
-        dst = '{}/dumped/dumped_labels'.format(DUMP_DIR)
-    with open(dst, 'rb') as f:
-        return pickle.load(f)
+    return df
 
 
 def json_loader():
-    json_ = json.load(open('{}/dumped/bbox_labels_600_hierarchy.json'.format(os.path.split(__file__)[0])))['Subcategory']
+    json_ = json.load(open('{}/dumped/bbox_labels_600_hierarchy.json'.format(split(__file__)[0])))['Subcategory']
     return json_
 
 
 def check_requirements():
-    if not os.path.exists(os.path.join(DUMP_DIR, 'dumped/bbox_labels_600_hierarchy.json')):
+    if not exists(join(DUMP_DIR, 'bbox_labels_600_hierarchy.json')):
         raise FileNotFoundError('MISSING bbox_labels_600_hierarchy.json')
-    if not os.path.exists(os.path.join(DUMP_DIR, 'dumped/dumped_bbox')):
-        bbox_dumper()
-    if not os.path.exists(os.path.join(DUMP_DIR, 'dumped/dumped_img_dirs')):
-        img_dumper()
-    if not os.path.exists(os.path.join(DUMP_DIR, 'dumped/dumped_labels')):
-        label_dumper()
 
 
 if __name__ == '__main__':
-    # bbox_dumper()
-    # img_dumper()
-    # label_dumper()
-
-    # lst = img_loader()
-    # bbox = bbox_loader()
-    # labels = label_loader()
+    for i in ["Train", "Test", "Validation"]:
+        train = annotation_loader(i)
+    imgs = img_dirs()
+    labels = label_loader()
     pass

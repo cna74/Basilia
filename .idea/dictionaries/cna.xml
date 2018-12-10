@@ -2,6 +2,16 @@
   <dictionary name="cna">
     <words>
       <w>idxs</w>
+      <w>imread</w>
+      <w>imwrite</w>
+      <w>xmax</w>
+      <w>xmaxs</w>
+      <w>xmin</w>
+      <w>xmins</w>
+      <w>ymax</w>
+      <w>ymaxs</w>
+      <w>ymin</w>
+      <w>ymins</w>
     </words>
   </dictionary>
 </component>
