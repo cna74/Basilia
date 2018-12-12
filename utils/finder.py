@@ -281,7 +281,8 @@ class Finder:
                 cv2.imwrite(save_to, img)
 
         elif config.AVAILABLE_AS == "csv":
-            for img_url in progressbar(self.data[:, config.IMG], prefix="Downloading "):
+            file_names = np.unique(self.data[:, config.IMG])
+            for img_url in progressbar(file_names, prefix="Downloading "):
                 name = img_url.rsplit("/")[-1]
                 save_to = join(out, name)
 
