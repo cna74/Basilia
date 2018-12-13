@@ -21,9 +21,8 @@ JSON_ = dumper.json_loader()
 
 # noinspection PyTypeChecker
 class Finder:
-    def __init__(self, subject, size=None,
-                 etc=False, just=False, address=None,
-                 is_group=None):
+    def __init__(self, subject, size=None, etc=False,
+                 just=False, address=None, is_group=None):
         self.subject = subject
         self.etc = etc
         self.just = just
@@ -154,9 +153,9 @@ class Finder:
                 self.__search_result.append(i['LabelName'])
                 if len(i.keys()) > 1:
                     if 'Subcategory' in i.keys():
-                        self._dig(i['Subcategory'])
+                        self._search_dig(i['Subcategory'])
                     elif 'Part' in i.keys():
-                        self._dig(i['Part'])
+                        self._search_dig(i['Part'])
 
             elif len(i.keys()) > 1:
                 if 'Subcategory' in i.keys():
@@ -171,14 +170,14 @@ class Finder:
         else:
             self.__search_result = [tools.mid_to_string(subject), ]
 
-    def _dig(self, list_):
+    def _search_dig(self, list_):
         for i in list_:
             self.__search_result.append(i['LabelName'])
             if len(i.keys()) > 1:
                 if 'Subcategory' in i.keys():
-                    self._dig(i['Subcategory'])
+                    self._search_dig(i['Subcategory'])
                 elif 'Part' in i.keys():
-                    self._dig(i['Part'])
+                    self._search_dig(i['Part'])
 
     def _extract_data_frame(self, folder_name):
         bbox_df = dumper.annotation_loader(folder_name=folder_name)
