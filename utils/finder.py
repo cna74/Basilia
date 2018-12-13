@@ -2,7 +2,6 @@ from os.path import split, join, exists
 from utils import dumper, config, tools
 import numpy.core.defchararray as char
 from progressbar import progressbar
-from tqdm import tqdm
 from os import makedirs
 from glob2 import glob
 import multiprocessing

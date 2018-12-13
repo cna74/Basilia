@@ -5,7 +5,6 @@ from utils import config
 from glob2 import glob
 import numpy as np
 import pickle
-import time
 import sys
 import cv2
 
@@ -16,7 +15,6 @@ def write(s):
     sys.stdout.write(s)
     sys.stdout.write("\n")
     sys.stdout.flush()
-    time.sleep(.1)
 
 
 def dict_of_all_classes() -> dict:
