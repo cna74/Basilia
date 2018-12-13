@@ -2,7 +2,6 @@ from os.path import split, join, exists
 from utils import dumper, config, tools
 import numpy.core.defchararray as char
 from progressbar import progressbar
-import matplotlib.pyplot as plt
 from os import makedirs
 from glob2 import glob
 import multiprocessing
@@ -56,6 +55,8 @@ class Finder:
         if isinstance(subject, str):
             self.search(subject=subject.capitalize(), etc=self.etc, just=self.just)
             self.fill_search_result()
+        else:
+            raise ValueError("subject excepted str but got {}".format(type(subject).__name__))
 
         self.classes = dict([(cls, i) for i, cls in enumerate(self.search_result, start=1)])
         sys.stdout.flush()
@@ -79,7 +80,7 @@ class Finder:
 
             self._extract_data_frame(folder_name=out)
 
-            imgs_id = list(set((i[config.IMG] for i in self.image_df.itertuples())))
+            imgs_id = list(set((i[1] for i in self.image_df.itertuples())))
             tools.write('{} image'.format(len(imgs_id)))
 
             self._get_imgs_path_with_bboxes(imgs_id=imgs_id)
@@ -102,9 +103,6 @@ class Finder:
                 pool.close()
                 pool.join()
 
-                for folder in result:
-                    for row in folder:
-                        self.data[row[0], config.WIDTH:config.HEIGHT+1] = row[1], row[2]
             elif config.AVAILABLE_AS == "csv":
                 result = self._imread_imwrite(fl_n_out=(self.data[:, 1], images_dir))
 
@@ -135,8 +133,8 @@ class Finder:
                 out = '{},{},{},{},{},{},{},{}\n'.format(name, width, height, cls, *bbox)
                 file.write(out)
 
-    def bbox_test(self, target, n=4):
-        tools.bbox_test(address=self.address, target=target, n=n)
+    def bbox_test(self, target, n=4, thickness=3):
+        tools.bbox_test(address=self.address, target=target, n=n, thickness=thickness)
 
     def search(self, subject, etc, just):
         self._search_step1(subject)
@@ -199,14 +197,13 @@ class Finder:
                                                ['LabelName', 'XMin', 'YMin', 'XMax', 'YMax']]
                     result = result.values
 
-                    # add info(id, path, width, height)
-                    tmp = np.c_[np.repeat(i, len(result)).astype(np.uint),
-                                np.repeat(path, len(result)),
+                    # add info(path, width, height)
+                    tmp = np.c_[np.repeat(path, len(result)),
                                 np.repeat(0, len(result)),
                                 np.repeat(0, len(result)),
                                 result]
 
-                    # id, path, LabelName, XMin, YMin, XMax, YMax
+                    # path, LabelName, XMin, YMin, XMax, YMax
                     self.data = np.append(self.data, tmp)
 
             self.data = self.data.reshape((-1, config.ROW_LENGTH))
@@ -224,13 +221,12 @@ class Finder:
                     result = result.values
 
                     # add info(id, path)
-                    tmp = np.c_[np.repeat(i, len(result)).astype(np.uint),
-                                np.repeat(row[1], len(result)),
+                    tmp = np.c_[np.repeat(row[1], len(result)),
                                 np.repeat(0, len(result)),
                                 np.repeat(0, len(result)),
                                 result]
 
-                    # id, path, LabelName, XMin, YMin, XMax, YMax
+                    # path, LabelName, XMin, YMin, XMax, YMax
                     self.data = np.append(self.data, tmp)
 
             self.data = self.data.reshape((-1, config.ROW_LENGTH))
@@ -294,12 +290,9 @@ class Finder:
 
 if __name__ == '__main__':
     import time
-
     finder = Finder('apple', size=None, is_group=True)
     t1 = time.time()
-    finder.extract_images()
-
+    # finder.extract_images()
     t2 = time.time()
+    finder.bbox_test(target="train", n=3, thickness=5)
     print('multiprocessing took: {}'.format(t2 - t1))
-    # finder.bbox_test(n=4)
-    pass
