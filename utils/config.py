@@ -13,7 +13,7 @@ elif sys.platform == 'win32':
 
 IMG = 0
 WIDTH, HEIGHT = 1, 2
-LABEL_SLICE = 3
+LABEL = 3
 BBOX_SLICE = slice(4, 8)
 ROW_LENGTH = 8
 headers = {0: 'ImageID', 1: 'Source', 2: 'LabelName', 3: 'Confidence',

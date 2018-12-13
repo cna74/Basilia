@@ -2,6 +2,7 @@ from os.path import split, join, exists
 from utils import dumper, config, tools
 import numpy.core.defchararray as char
 from progressbar import progressbar
+from tqdm import tqdm
 from os import makedirs
 from glob2 import glob
 import multiprocessing
@@ -129,12 +130,13 @@ class Finder:
                 bbox = row[config.BBOX_SLICE]
                 bbox = [int(i * j) for i, j in zip(bbox, [width, height, width, height])]
                 name = row[config.IMG].split("/")[-1]
-                cls = row[config.LABEL_SLICE]
+                cls = row[config.LABEL]
                 out = '{},{},{},{},{},{},{},{}\n'.format(name, width, height, cls, *bbox)
                 file.write(out)
 
     def bbox_test(self, target, n=4, thickness=3):
-        tools.bbox_test(address=self.address, target=target, n=n, thickness=thickness)
+        tools.bbox_test(address=self.address, target=target,
+                        n=n, thickness=thickness)
 
     def search(self, subject, etc, just):
         self._search_step1(subject)
@@ -187,112 +189,78 @@ class Finder:
                 self.image_df = self.image_df.append(bbox_df.loc[bbox_df['LabelName'] == i])
 
     def _get_imgs_path_with_bboxes(self, imgs_id):
+        for path in progressbar(IMG_DIRS, prefix="fetch object"):
+            name = None
 
-        if config.AVAILABLE_AS == "jpg":
-            for i, path in enumerate(IMG_DIRS, start=1):
+            if config.AVAILABLE_AS == "jpg":
                 name = path.rsplit("/")[-1][:-4]
-                # find them
-                if name in imgs_id:
-                    result = self.image_df.loc[self.image_df['ImageID'] == name,
-                                               ['LabelName', 'XMin', 'YMin', 'XMax', 'YMax']]
-                    result = result.values
+            elif config.AVAILABLE_AS == "csv":
+                name = path[0]
+                path = path[1]
 
-                    # add info(path, width, height)
-                    tmp = np.c_[np.repeat(path, len(result)),
-                                np.repeat(0, len(result)),
-                                np.repeat(0, len(result)),
-                                result]
+            # find them
+            if name in imgs_id:
+                result = self.image_df.loc[self.image_df['ImageID'] == name,
+                                           ['LabelName', 'XMin', 'YMin', 'XMax', 'YMax']]
+                result = result.values
 
-                    # path, LabelName, XMin, YMin, XMax, YMax
-                    self.data = np.append(self.data, tmp)
+                # add info(path, width, height)
+                tmp = np.c_[np.repeat(path, len(result)),
+                            np.repeat(0, len(result)),
+                            np.repeat(0, len(result)),
+                            result]
 
-            self.data = self.data.reshape((-1, config.ROW_LENGTH))
-            for i in np.unique(self.data[:, config.LABEL_SLICE]):
-                self.data[np.where(self.data[:, config.LABEL_SLICE] == i), config.LABEL_SLICE] = tools.mid_to_string(i)
-                self.data[:, config.BBOX_SLICE] = self.data[:, config.BBOX_SLICE].astype(np.float)
+                # path, LabelName, XMin, YMin, XMax, YMax
+                self.data = np.append(self.data, tmp)
 
-        elif config.AVAILABLE_AS == "csv":
-            for i, row in enumerate(IMG_DIRS, start=1):
-                # find them
-                if row[0] in imgs_id:
-                    result = self.image_df.loc[self.image_df["ImageID"] == row[0],
-                                               ['LabelName', 'XMin', 'YMin', 'XMax', 'YMax']]
-
-                    result = result.values
-
-                    # add info(id, path)
-                    tmp = np.c_[np.repeat(row[1], len(result)),
-                                np.repeat(0, len(result)),
-                                np.repeat(0, len(result)),
-                                result]
-
-                    # path, LabelName, XMin, YMin, XMax, YMax
-                    self.data = np.append(self.data, tmp)
-
-            self.data = self.data.reshape((-1, config.ROW_LENGTH))
-            for i in np.unique(self.data[:, config.LABEL_SLICE]):
-                self.data[np.where(self.data[:, config.LABEL_SLICE] == i), config.LABEL_SLICE] = tools.mid_to_string(i)
-                self.data[:, config.BBOX_SLICE] = self.data[:, config.BBOX_SLICE].astype(np.float)
+        self.data = self.data.reshape((-1, config.ROW_LENGTH))
+        for label in np.unique(self.data[:, config.LABEL]):
+            self.data[np.where(self.data[:, config.LABEL] == label), config.LABEL] = tools.mid_to_string(label)
+        self.data[:, config.BBOX_SLICE] = self.data[:, config.BBOX_SLICE].astype(np.float)
 
     def _imread_imwrite(self, fl_n_out):
         folders = fl_n_out[0]
         out = fl_n_out[1]
-
+        file_names = prefix = None
         ret = np.array([])
-        if config.AVAILABLE_AS == "jpg":
+        state = config.AVAILABLE_AS
 
+        if state == "jpg":
             dirs = np.unique(self.data[:, config.IMG]).astype(np.str)
             sep = char.rpartition(dirs, "/")
             file_names = sep[np.where(sep[:, 0] == folders)][:, 2]
-            for img_dir in progressbar(file_names, prefix=folders.rsplit("/")[-1] + " "):
-                save_to = join(out, img_dir)
-                imread = join(folders, img_dir)
-
-                if sys.platform == "win32":
-                    save_to = save_to.replace('\\', '/')
-
-                img = cv2.imread(imread)
-                if isinstance(self.size, tuple):
-                    img = cv2.resize(img, self.size)
-
-                height, width, _ = img.shape
-                fnd = np.where(self.data[:, config.IMG] == imread)
-                ret = np.append(ret, [fnd, width, height])
-                cv2.imwrite(save_to, img)
-
-        elif config.AVAILABLE_AS == "csv":
+            prefix = "{} ".format(folders.rsplit("/")[-1])
+        elif state == "csv":
             file_names = np.unique(self.data[:, config.IMG])
-            for img_url in progressbar(file_names, prefix="Downloading "):
-                name = img_url.rsplit("/")[-1]
-                save_to = join(out, name)
+            prefix = "Downloading "
 
-                if sys.platform == "win32":
-                    save_to = save_to.replace('\\', '/')
+        for img_dir in progressbar(file_names, prefix=prefix):
+            save_to = join(out, img_dir) if state == "jpg" else join(out, img_dir.rsplit("/")[-1])
+            save_to = save_to.replace('\\', '/') if sys.platform == "win32" else save_to
+            imread = join(folders, img_dir) if state == "jpg" else img_dir
 
-                if exists(save_to):
-                    img = cv2.imread(save_to)
-                else:
-                    img = imageio.imread(img_url)
-                    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            if not exists(save_to):
+                img = cv2.imread(imread) if state == "jpg" else imageio.imread(imread)
+            else:
+                img = cv2.imread(save_to)
 
-                if isinstance(self.size, tuple):
-                    img = cv2.resize(img, self.size)
-                height, width, _ = img.shape
-                fnd = np.where(self.data[:, config.IMG] == img_url)
-                ret = np.append(ret, [fnd, width, height])
-                cv2.imwrite(save_to, img)
+            if isinstance(self.size, tuple):
+                img = cv2.resize(img, self.size)
+
+            height, width, _ = img.shape
+            fnd = np.where(self.data[:, config.IMG] == imread)
+            ret = np.append(ret, [fnd, width, height])
+            cv2.imwrite(save_to, img)
 
         ret = ret.reshape((-1, 3))
-        if config.AVAILABLE_AS == "csv":
-            ret = [ret, ]
-        return ret
+        return ret if state == "jpg" else [ret, ]
 
 
 if __name__ == '__main__':
     import time
     finder = Finder('apple', size=None, is_group=True)
     t1 = time.time()
-    # finder.extract_images()
+    finder.extract_images()
     t2 = time.time()
     finder.bbox_test(target="train", n=3, thickness=5)
     print('multiprocessing took: {}'.format(t2 - t1))
