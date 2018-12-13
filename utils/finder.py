@@ -136,23 +136,8 @@ class Finder:
                 out = '{},{},{},{},{},{},{},{}\n'.format(name, width, height, cls, *bbox)
                 file.write(out)
 
-    # todo not working at all
-    def bbox_test(self, n=4):
-        choose = np.unique(self.data[:, 0])
-        choices = np.random.choice(len(choose), n * n, replace=False)
-
-        plt.figure(figsize=(10, 10))
-        for idx, choice in enumerate(choices, start=1):
-            data = self.data[np.where(self.data[:, 0] == choice)]
-            img = data[0, 1]
-            bboxes = data[:, config.BBOX_SLICE]
-            titles = set(data[:, config.LABEL_SLICE])
-            plt.subplot(n, n, idx)
-            img = tools.draw(img, bboxes, self.size)
-            plt.imshow(img)
-            plt.title(', '.join(titles))
-            plt.axis('off')
-        plt.show()
+    def bbox_test(self, target, n=4):
+        tools.bbox_test(address=self.address, target=target, n=n)
 
     def search(self, subject, etc, just):
         self._search_step1(subject)

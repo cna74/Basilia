@@ -1,5 +1,7 @@
 from utils import dumper, finder, tf_generator
 from os.path import join, exists
+import matplotlib.pyplot as plt
+from glob2 import glob
 import numpy as np
 import pickle
 import sys
@@ -40,13 +42,10 @@ def mid_to_string(mid_or_name) -> str:
         return sel['code']
 
 
-def draw(img, bboxes, size):
-    bboxes = np.multiply(size[0], bboxes.astype(np.float))
-    bboxes = bboxes.astype(np.uint8)
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
+def draw(img, bboxes):
+    bboxes = bboxes.astype(np.uint)
     for b in bboxes:
-        img = cv2.rectangle(img=img, pt1=(b[0], b[1]), pt2=(b[2], b[3]), color=(0, 0, 255), thickness=2)
+        img = cv2.rectangle(img=img, pt1=(b[0], b[1]), pt2=(b[2], b[3]), color=(0, 0, 255), thickness=5)
     return img
 
 
@@ -57,6 +56,28 @@ def generate(csv_input, output_path, images_dir, classes):
                       classes=classes)
 
 
+def bbox_test(address, target="test", n=2):
+    name, label, bbox, = 0, 3, slice(4, 8)
+    file = "{}_bbox.csv".format(target.title())
+    csv = np.genfromtxt("{}/{}/{}".format(address, "records", file), delimiter=",", skip_header=1, dtype=str)
+    dir_ = join(address, "images", target)
+    images = glob("{}/*.jpg".format(dir_))
+    selected = np.random.choice(images, n*n, replace=False)
+    del images, dir_
+
+    plt.figure(figsize=(10, 10))
+    for idx, img_dir in enumerate(selected, start=1):
+        img = plt.imread(img_dir)
+        res = csv[np.where(csv[:, name] == img_dir.rsplit("/")[-1])]
+        bboxes = res[:, bbox]
+        titles = np.unique(res[:, label])
+        plt.subplot(n, n, idx)
+        img = draw(img, bboxes)
+        plt.imshow(img)
+        plt.title(', '.join(titles))
+        plt.axis('off')
+    plt.show()
+
+
 if __name__ == "__main__":
-    d = dict_of_all_classes()
-    print(d)
+    bbox_test(address="/home/cna/PycharmProjects/Basilia/utils/data")
