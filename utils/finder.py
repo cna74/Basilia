@@ -239,6 +239,7 @@ class Finder:
         for label in np.unique(self.data[:, config.LABEL]):
             self.data[np.where(self.data[:, config.LABEL] == label), config.LABEL] = tools.mid_to_string(label)
         self.data[:, config.BBOX_SLICE] = self.data[:, config.BBOX_SLICE].astype(np.float)
+        self.data[:, config.IMG] = self.data[:, config.IMG].astype(np.str)
 
     def _imread_imwrite(self, fl_n_out):
         folders = fl_n_out[0]
