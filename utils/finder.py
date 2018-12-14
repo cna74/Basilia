@@ -74,7 +74,7 @@ class Finder:
         self.resource = resource if resource is not None else config.RESOURCE
         # Open-Image DataSet path
         self.input_dir = input_dir if input_dir is not None else config.DATA_DIR
-
+        self.dirs = ("Validation", "Test", "Train")
         if isinstance(is_group, bool):
             self.is_group = "1" if is_group else "0"
 
@@ -84,37 +84,40 @@ class Finder:
             self.out_dir = join(split(__name__)[0], 'data')
         if not exists(self.out_dir):
             makedirs(self.out_dir)
-        for d in ["images/train", "images/validation", "images/test", "records"]:
+        for d in ["images/Train", "images/Validation", "images/Test", "records"]:
             mkd = join(self.out_dir, d)
             if not exists(mkd):
                 makedirs(mkd)
 
         if isinstance(subject, str):
             self.search(subject=subject.capitalize(), etc=self.etc, just=self.just)
-            self._fill_search_result()
+            self._search_fill_result()
         else:
             raise ValueError("subject excepted str but got {}".format(type(subject).__name__))
 
         self.classes = dict([(cls, i) for i, cls in enumerate(self.search_result, start=1)])
 
-    def _fill_search_result(self):
-        tmp = []
-        for i in self._search_result:
-            tmp.append(tools.mid_to_string(i))
-        self.search_result = set(tmp)
+    def extract_images(self, dirs=None, threads=multiprocessing.cpu_count()):
+        dirs = dirs if dirs is not None and isinstance(dirs, tuple) else self.dirs
 
-    def extract_images(self, dirs=("Validation", "Test", "Train"), threads=multiprocessing.cpu_count()):
         for out in dirs:
             tools.write(out)
             result = None
             output_path = join(self.out_dir, "records/{}.record".format(out))
             csv_out = join(self.out_dir, "records/{}_bbox.csv".format(out))
-            images_dir = join(self.out_dir, "images/{}".format(out.lower()))
+            images_dir = join(self.out_dir, "images/{}".format(out))
 
             self._extract_data_frame(folder_name=out)
             imgs_id = list(set((i[1] for i in self.image_df.itertuples())))
+
+            a = len(imgs_id)
+            print("{} images".format(a))
+
             self._get_imgs_path_with_bboxes(imgs_id=imgs_id)
-            self.table.loc[out] = len(imgs_id), len(self.data)
+            b = len(self.data)
+            print("{} objects")
+
+            self.table.loc[out] = a, b
 
             if self.resource == "jpg":
                 folders = glob(self.input_dir + "{}/*/".format(out))
@@ -140,8 +143,7 @@ class Finder:
             self.data = np.delete(np.empty((1, len(config.DF_COLS))), 0, 0)
 
             # generate tf.record
-            tools.generate(csv_input=csv_out, images_dir=images_dir,
-                           output_path=output_path, classes=self.classes)
+            tools.generate(csv_input=csv_out, images_dir=images_dir, output_path=output_path, classes=self.classes)
 
     def save_csv(self, csv_out):
         with open(csv_out, 'w') as file:
@@ -199,6 +201,12 @@ class Finder:
                     self._search_dig(i['Subcategory'])
                 elif 'Part' in i.keys():
                     self._search_dig(i['Part'])
+
+    def _search_fill_result(self):
+        tmp = []
+        for i in self._search_result:
+            tmp.append(tools.mid_to_string(i))
+        self.search_result = set(tmp)
 
     def _extract_data_frame(self, folder_name):
         bbox_df = dumper.annotation_loader(folder_name=folder_name, dir_=self.input_dir)
@@ -280,10 +288,10 @@ class Finder:
 
 if __name__ == '__main__':
     import time
-    finder = Finder(subject='food', etc=True, is_group=True, out_dir="/home/cna/Desktop")
+    finder = Finder(subject='banana', etc=True, is_group=True, out_dir="/home/cna/Desktop")
     t1 = time.time()
     finder.extract_images(dirs=("Validation", ))
     t2 = time.time()
-    finder.bbox_test(target="validation", n=2, thickness=6)
+    finder.bbox_test(target="Validation", n=2, thickness=6)
     print(finder.table)
     print('multiprocessing took: {}'.format(t2 - t1))
