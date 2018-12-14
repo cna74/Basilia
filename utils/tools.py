@@ -8,7 +8,7 @@ import pickle
 import sys
 import cv2
 
-LABELS = dumper.label_loader()
+LABELS = dumper.label_loader(dir_=config.DATA_DIR)
 
 
 def write(s):
@@ -25,7 +25,7 @@ def dict_of_all_classes() -> dict:
         raw = list(set([i[0] for i in LABELS.itertuples()]))
         classes = {}
         for i, j in enumerate(raw):
-            fnd = finder.Finder(subject=j, etc=True)
+            fnd = finder.Finder(subject=j, etc=True, resource=config.RESOURCE)
             result = sorted(list(fnd.search_result))
             if not len(result) == 1:
                 classes.update({j: result})
@@ -71,14 +71,19 @@ def bbox_test(address, target="test", n=2, thickness=3):
         img = plt.imread(img_dir)
         res = csv[np.where(csv[:, config.IMG] == img_dir.rsplit("/")[-1])]
         bboxes = res[:, config.BBOX_SLICE]
-        titles = np.unique(res[:, config.LABEL])
+        titles, counts = np.unique(res[:, config.LABEL], return_counts=True)
         plt.subplot(n, n, idx)
         img = draw(img, bboxes, thickness)
         plt.imshow(img)
-        plt.title(', '.join(titles))
+        title = ""
+        for i, j in zip(counts, titles):
+            title += "{} {}, ".format(i, j)
+        plt.title(title)
         plt.axis('off')
     plt.show()
 
 
 if __name__ == "__main__":
-    bbox_test(address="/home/cna/PycharmProjects/Basilia/utils/data")
+    # bbox_test(address="/home/cna/PycharmProjects/Basilia/utils/data")
+    d = dict_of_all_classes()
+    print(d.get("Fruit"))
