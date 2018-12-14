@@ -65,6 +65,8 @@ class Finder:
         self.search_result = []
         # empty numpy array and data frame to append later
         self.image_df = pd.DataFrame({config.HEADERS.get(i): [] for i in config.DF_COLS})
+        self.table = pd.DataFrame(index=["Train", "Validation", "Test"],
+                                  columns=['# Images', '# Objects'])
         self.data = np.delete(np.empty((1, config.ROW_LENGTH)), 0, 0)
         # directory to save images and data
         self.out_dir = out_dir
@@ -76,14 +78,16 @@ class Finder:
         if isinstance(is_group, bool):
             self.is_group = "1" if is_group else "0"
 
-        if not out_dir:
+        if self.out_dir:
+            self.out_dir = join(self.out_dir, 'data')
+        else:
             self.out_dir = join(split(__name__)[0], 'data')
-            if not exists(self.out_dir):
-                makedirs(self.out_dir)
-            for d in ["images/train", "images/validation", "images/test", "records"]:
-                mkd = join(self.out_dir, d)
-                if not exists(mkd):
-                    makedirs(mkd)
+        if not exists(self.out_dir):
+            makedirs(self.out_dir)
+        for d in ["images/train", "images/validation", "images/test", "records"]:
+            mkd = join(self.out_dir, d)
+            if not exists(mkd):
+                makedirs(mkd)
 
         if isinstance(subject, str):
             self.search(subject=subject.capitalize(), etc=self.etc, just=self.just)
@@ -99,26 +103,19 @@ class Finder:
             tmp.append(tools.mid_to_string(i))
         self.search_result = set(tmp)
 
-    def extract_images(self, threads=None):
-        if not threads:
-            threads = multiprocessing.cpu_count()
-
-        for out in ["Validation", "Test", "Train"]:
+    def extract_images(self, dirs=("Validation", "Test", "Train"), threads=multiprocessing.cpu_count()):
+        for out in dirs:
             tools.write(out)
-
+            result = None
             output_path = join(self.out_dir, "records/{}.record".format(out))
             csv_out = join(self.out_dir, "records/{}_bbox.csv".format(out))
             images_dir = join(self.out_dir, "images/{}".format(out.lower()))
 
             self._extract_data_frame(folder_name=out)
-
             imgs_id = list(set((i[1] for i in self.image_df.itertuples())))
-            tools.write('{} image'.format(len(imgs_id)))
-
             self._get_imgs_path_with_bboxes(imgs_id=imgs_id)
-            tools.write('{} unique object'.format(self.data.shape[0]))
+            self.table.loc[out] = len(imgs_id), len(self.data)
 
-            result = None
             if self.resource == "jpg":
                 folders = glob(self.input_dir + "{}/*/".format(out))
                 folders = char.rpartition(np.array(folders), "/")[:, 0]
@@ -145,7 +142,6 @@ class Finder:
             # generate tf.record
             tools.generate(csv_input=csv_out, images_dir=images_dir,
                            output_path=output_path, classes=self.classes)
-        tools.write("done")
 
     def save_csv(self, csv_out):
         with open(csv_out, 'w') as file:
@@ -215,7 +211,7 @@ class Finder:
 
     def _get_imgs_path_with_bboxes(self, imgs_id):
         img_dirs = dumper.img_dirs(resource=self.resource, dir_=self.input_dir)
-        for path in progressbar(img_dirs, prefix="fetch object"):
+        for path in progressbar(img_dirs, prefix="find objects"):
             name = None
 
             if self.resource == "jpg":
@@ -283,9 +279,10 @@ class Finder:
 
 if __name__ == '__main__':
     import time
-    finder = Finder(subject='fruit', etc=True, size=None, is_group=True)
+    finder = Finder(subject='food', etc=True, is_group=True, out_dir="/home/cna/Desktop")
     t1 = time.time()
-    finder.extract_images()
+    finder.extract_images(dirs=("Validation", ))
     t2 = time.time()
-    finder.bbox_test(target="train", n=4, thickness=6)
+    finder.bbox_test(target="validation", n=2, thickness=6)
+    print(finder.table)
     print('multiprocessing took: {}'.format(t2 - t1))

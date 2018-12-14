@@ -7,7 +7,6 @@ import pandas as pd
 import numpy as np
 import json
 import sys
-
 """
 dump the origin dataset's csv files
 """
@@ -67,8 +66,8 @@ def label_loader(dir_) -> pd.DataFrame:
     return df
 
 
-def json_loader(dir_=config.DATA_DIR) -> json.JSONDecoder:
-    js = join(dir_, 'bbox_labels_600_hierarchy.json')
+def json_loader(dir_=config.DATA_DIR, name='bbox_labels_600_hierarchy.json') -> json.JSONDecoder:
+    js = join(dir_, name)
     if not exists(js):
         raise FileNotFoundError('MISSING {}'.format(js))
     json_ = json.load(open(js))['Subcategory']

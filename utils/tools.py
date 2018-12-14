@@ -58,7 +58,7 @@ def generate(csv_input, output_path, images_dir, classes):
                       classes=classes)
 
 
-def bbox_test(address, target="test", n=2, thickness=3):
+def bbox_test(address, target, n=2, thickness=3):
     file = "{}_bbox.csv".format(target.title())
     csv = np.genfromtxt("{}/{}/{}".format(address, "records", file), delimiter=",", skip_header=1, dtype=str)
     dir_ = join(address, "images", target)
