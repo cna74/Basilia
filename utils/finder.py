@@ -11,8 +11,6 @@ import imageio
 import cv2
 import sys
 
-JSON_ = dumper.json_loader()
-
 
 class Finder:
     def __init__(self, subject, resource=None, input_dir=None, out_dir=None,
@@ -62,7 +60,7 @@ class Finder:
         self.size = size
         self.is_group =is_group
         # MID type of result
-        self.__search_result = []
+        self._search_result = []
         # Str type of result
         self.search_result = []
         # empty numpy array and data frame to append later
@@ -89,15 +87,15 @@ class Finder:
 
         if isinstance(subject, str):
             self.search(subject=subject.capitalize(), etc=self.etc, just=self.just)
-            self.fill_search_result()
+            self._fill_search_result()
         else:
             raise ValueError("subject excepted str but got {}".format(type(subject).__name__))
 
         self.classes = dict([(cls, i) for i, cls in enumerate(self.search_result, start=1)])
 
-    def fill_search_result(self):
+    def _fill_search_result(self):
         tmp = []
-        for i in self.__search_result:
+        for i in self._search_result:
             tmp.append(tools.mid_to_string(i))
         self.search_result = set(tmp)
 
@@ -166,40 +164,40 @@ class Finder:
                         n=n, thickness=thickness)
 
     def search(self, subject, etc, just):
-        self._search_step1(subject)
-        self._search_step2(subject, etc, just)
+        self._search_step1(subject=subject)
+        self._search_step2(subject=subject, etc=etc, just=just)
 
-    def _search_step1(self, subject, list_=None):
+    def _search_step1(self, subject, json=None):
         subject = subject.capitalize()
-        if not list_:
-            self.__search_result = []
-            list_ = JSON_
+        if not json:
+            self._search_result = []
+            json = dumper.json_loader()
 
-        for i in list_:
-            if i['LabelName'] == tools.mid_to_string(subject):
-                self.__search_result.append(i['LabelName'])
-                if len(i.keys()) > 1:
-                    if 'Subcategory' in i.keys():
-                        self._search_dig(i['Subcategory'])
-                    elif 'Part' in i.keys():
-                        self._search_dig(i['Part'])
+        for node in json:
+            if node['LabelName'] == tools.mid_to_string(subject):
+                self._search_result.append(node['LabelName'])
+                if len(node.keys()) > 1:
+                    if 'Subcategory' in node.keys():
+                        self._search_dig(node['Subcategory'])
+                    elif 'Part' in node.keys():
+                        self._search_dig(node['Part'])
 
-            elif len(i.keys()) > 1:
-                if 'Subcategory' in i.keys():
-                    self._search_step1(subject=subject, list_=i['Subcategory'])
-                elif 'Part' in i.keys():
-                    self._search_step1(subject=subject, list_=i['Part'])
+            elif len(node.keys()) > 1:
+                if 'Subcategory' in node.keys():
+                    self._search_step1(subject=subject, json=node['Subcategory'])
+                elif 'Part' in node.keys():
+                    self._search_step1(subject=subject, json=node['Part'])
 
     def _search_step2(self, subject, etc, just):
-        if not just:
-            if not etc and tools.mid_to_string(subject) in self.__search_result and len(self.__search_result) > 1:
-                self.__search_result.remove(tools.mid_to_string(subject))
+        if just:
+            self._search_result = [tools.mid_to_string(subject), ]
         else:
-            self.__search_result = [tools.mid_to_string(subject), ]
+            if not etc and tools.mid_to_string(subject) in self._search_result and len(self._search_result) > 1:
+                self._search_result.remove(tools.mid_to_string(subject))
 
     def _search_dig(self, list_):
         for i in list_:
-            self.__search_result.append(i['LabelName'])
+            self._search_result.append(i['LabelName'])
             if len(i.keys()) > 1:
                 if 'Subcategory' in i.keys():
                     self._search_dig(i['Subcategory'])
@@ -208,7 +206,7 @@ class Finder:
 
     def _extract_data_frame(self, folder_name):
         bbox_df = dumper.annotation_loader(folder_name=folder_name, dir_=self.input_dir)
-        for i in self.__search_result:
+        for i in self._search_result:
             if isinstance(self.is_group, str):
                 self.image_df = self.image_df.append(
                     bbox_df.loc[(bbox_df['LabelName'] == i) & (bbox_df["IsGroupOf"] == self.is_group)])
