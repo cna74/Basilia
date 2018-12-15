@@ -60,27 +60,29 @@ class Finder:
             True Indicates a picture taken from the inside of the object (e.g., a car interior or inside of a building).
             False object is not inside
             None both of situation [Default]
-
+        :param just_count_images:
+            True just_count_images set this True to just check how many images finder may extract
+            False Default value and will extract images [Default]
         :param automate: True automate all steps of finder LIKE A BOSS!!!
                          False [Default]
 
         Examples ------------------------------------------------------------------------------------------
 
-        Finder(subject='apple', input_dir="/media/home/cna/backpack/dataset/Open-Image/")
+        >>> Finder(subject='apple', input_dir="/media/home/cna/backpack/dataset/Open-Image/")
             -> result = all kind(single and grouped) of apples in original size
 
-        Finder(subject='apple', size=(600, 600), input_dir="/media/home/cna/backpack/dataset/Open-Image/")
+        >>> Finder(subject='apple', size=(600, 600), input_dir="/media/home/cna/backpack/dataset/Open-Image/")
             -> result = all kind(single and grouped) of apples in (600, 600) size
 
-        Finder(subject='fruit', just=True, input_dir="/media/home/cna/backpack/dataset/Open-Image/")
+        >>> Finder(subject='fruit', just=True, input_dir="/media/home/cna/backpack/dataset/Open-Image/")
             -> result = just kind(single and grouped) fruits(basically fruit is those type of fruit that are't exactly
                         labeled but we know they are fruit, like persimmon so fruits like this are in category named
                         fruit witch is actually THE OTHERS) in (600, 600) size
 
-        Finder(subject='fruit', etc=False input_dir="/media/home/cna/backpack/dataset/Open-Image/")
+        >>> Finder(subject='fruit', etc=False input_dir="/media/home/cna/backpack/dataset/Open-Image/")
             -> result = all kind(single and grouped) of fruits(apple, orange, lemon, banana, ...) except other fruits
 
-        Finder(subject='fruit', etc=True, input_dir="/media/home/cna/backpack/dataset/Open-Image/")
+        >>> Finder(subject='fruit', etc=True, input_dir="/media/home/cna/backpack/dataset/Open-Image/")
             -> result = all kind(single and grouped) of fruits(Banana, Apple, Grapefruit, Lemon, Strawberry, Grape,
                         Tomato, Watermelon, Common fig, Pineapple, Mango, Pomegranate, Orange, Peach, Cantaloupe,
                         Pear) and the fruits(other type of fruits) in original size
