@@ -1,22 +1,23 @@
+from cv2 import resize, imread as cvread, imwrite as cvwrite
+from multiprocessing import Pool, cpu_count
 from os.path import split, join, exists
 from utils import dumper, config, tools
 import numpy.core.defchararray as char
 from progressbar import progressbar
+from pandas import DataFrame
+from imageio import imread
+from shutil import rmtree
+from sys import platform
 from os import makedirs
 from glob2 import glob
-import multiprocessing
-import pandas as pd
 import numpy as np
-import imageio
-import cv2
-import sys
 
 
 class Finder:
-    def __init__(self, subject, resource=config.RESOURCE, input_dir=config.DATA_DIR,
+    def __init__(self, subject=None, resource=config.RESOURCE, input_dir=config.DATA_DIR,
                  out_dir=None, just=False, etc=True, is_group=None, is_occluded=None,
                  is_truncated=None, size=None, is_depiction=None, automate=False,
-                 is_inside=None):
+                 is_inside=None, just_count_images=False):
         """
         extract desired images with given conditions
         :param subject:
@@ -49,6 +50,7 @@ class Finder:
         :param is_truncated:
             True Indicates that the object extends beyond the boundary of the image
             False Indicates that all part of the object is in boundary of the image
+            None both of situation [Default]
         :param is_depiction:
             True Indicates that the object is a depiction (e.g., a cartoon or drawing of the object,
                                                            not a real physical instance).
@@ -83,18 +85,21 @@ class Finder:
                         Tomato, Watermelon, Common fig, Pineapple, Mango, Pomegranate, Orange, Peach, Cantaloupe,
                         Pear) and the fruits(other type of fruits) in original size
         """
+
+        # region params
         self.subject = subject
         self.etc = etc
         self.just = just
         self.size = size
+        self.just_count_images = just_count_images
         self.is_group = self.is_depiction = self.is_inside = self.is_truncated = self.is_occluded = ["0", "1"]
         # MID type of result
         self._search_result = []
         # Str type of result
         self.search_result = []
         # empty numpy array and data frame to append later
-        self.image_df = pd.DataFrame({config.HEADERS.get(i): [] for i in config.DF_COLS})
-        self.table = pd.DataFrame(index=["Train", "Validation", "Test"], columns=['# Images', '# Objects'])
+        self.image_df = None
+        self.table = DataFrame(index=["Train", "Validation", "Test"], columns=['Images', 'Objects'], dtype=int)
         self.data = np.delete(np.empty((1, config.ROW_LENGTH)), 0, 0)
         # directory to save images and data
         self.out_dir = out_dir
@@ -103,7 +108,9 @@ class Finder:
         # Open-Image DataSet path
         self.input_dir = input_dir
         self.dirs = ("Train", "Validation", "Test")
+        # endregion
 
+        # region conditions
         if isinstance(is_group, bool):
             self.is_group = ["1", ] if is_group else ["0", ]
         if isinstance(is_depiction, bool):
@@ -114,18 +121,26 @@ class Finder:
             self.is_truncated = ["1", ] if is_truncated else ["0", ]
         if isinstance(is_occluded, bool):
             self.is_occluded = ["1", ] if is_occluded else ["0", ]
+        # endregion
 
+        # region out_dir
         if self.out_dir:
             self.out_dir = join(self.out_dir, 'data')
         else:
             self.out_dir = join(split(__name__)[0], 'data')
+        try:
+            rmtree(self.out_dir)
+        except FileNotFoundError:
+            pass
         if not exists(self.out_dir):
             makedirs(self.out_dir)
         for d in ["images/Train", "images/Validation", "images/Test", "records"]:
             mkd = join(self.out_dir, d)
             if not exists(mkd):
                 makedirs(mkd)
+        # endregion
 
+        # region subject
         if isinstance(subject, str):
             self.search(subject=subject.capitalize(), etc=self.etc, just=self.just)
             self._fill_search_result()
@@ -134,20 +149,30 @@ class Finder:
                 self.search(subject=subj.capitalize(), etc=self.etc, just=self.just)
                 self._fill_search_result()
             self._search_result = [tools.mid_to_string(s) for s in self.search_result]
+        elif not subject:
+            self._search_result = tools.LABELS["code"].tolist()
+            self._fill_search_result()
         else:
             raise ValueError("subject excepted str or iterable(tuple, list) but got {}".format(type(subject).__name__))
+        # endregion
 
         self.classes = dict([(cls, i) for i, cls in enumerate(self.search_result, start=1)])
+
+        # region automate
         if automate:
             self.extract_images()
-            self.bbox_test(target="validation")
+            if not self.just_count_images:
+                self.bbox_test(target="train", n=4, thickness=8)
+            print(self.table)
+        # endregion
 
-    def extract_images(self, dirs=None, threads=multiprocessing.cpu_count()):
+    def extract_images(self, dirs=None, threads=cpu_count()):
         dirs = dirs if dirs is not None and isinstance(dirs, tuple) else self.dirs
 
         for out in dirs:
-            tools.write(out)
+            tools.write(out, condition=not self.just_count_images)
             result = None
+            a = b = 0
             output_path = join(self.out_dir, "records/{}.record".format(out))
             csv_out = join(self.out_dir, "records/{}_bbox.csv".format(out))
             images_dir = join(self.out_dir, "images/{}".format(out))
@@ -155,40 +180,43 @@ class Finder:
             self._extract_data_frame(folder_name=out)
             imgs_id = list(set((i[1] for i in self.image_df.itertuples())))
 
-            a = len(imgs_id)
-            print("{} images".format(a))
-
-            self._get_imgs_path_with_bboxes(imgs_id=imgs_id)
-            b = len(self.data)
-            print("{} objects".format(b))
+            a += len(imgs_id)
+            tools.write("{} images".format(a), condition=not self.just_count_images)
+            if self.just_count_images:
+                self.table.loc[out] = a, b
+                continue
+            if a > 0:
+                self._get_imgs_path_with_bboxes(imgs_id=imgs_id)
+            b += len(self.data)
+            tools.write("{} objects".format(b))
 
             self.table.loc[out] = a, b
+            if b > 0:
+                if self.resource == "jpg":
+                    folders = glob(self.input_dir + "{}/*/".format(out))
+                    folders = char.rpartition(np.array(folders), "/")[:, 0]
 
-            if self.resource == "jpg":
-                folders = glob(self.input_dir + "{}/*/".format(out))
-                folders = char.rpartition(np.array(folders), "/")[:, 0]
+                    z = zip(folders, np.repeat(images_dir, len(folders)))
+                    pool = Pool(threads)
+                    result = pool.map(func=self._imread_imwrite, iterable=z)
+                    pool.close()
+                    pool.join()
 
-                z = zip(folders, np.repeat(images_dir, len(folders)))
-                pool = multiprocessing.Pool(threads)
-                result = pool.map(func=self._imread_imwrite, iterable=z)
-                pool.close()
-                pool.join()
+                elif self.resource == "csv":
+                    result = self._imread_imwrite(fl_n_out=(self.data[:, config.IMG], images_dir))
 
-            elif self.resource == "csv":
-                result = self._imread_imwrite(fl_n_out=(self.data[:, config.IMG], images_dir))
+                for folder in result:
+                    for row in folder:
+                        self.data[row[0], config.WIDTH:config.HEIGHT + 1] = row[1], row[2]
 
-            for folder in result:
-                for row in folder:
-                    self.data[row[0], config.WIDTH:config.HEIGHT + 1] = row[1], row[2]
+                self.save_csv(csv_out=csv_out)
+                # save some memory for next step
+                self.image_df = self.image_df[:0]
+                del imgs_id
+                self.data = np.delete(np.empty((1, len(config.DF_COLS))), 0, 0)
 
-            self.save_csv(csv_out=csv_out)
-            # save some memory for next step
-            self.image_df = self.image_df[:0]
-            del imgs_id
-            self.data = np.delete(np.empty((1, len(config.DF_COLS))), 0, 0)
-
-            # generate tf.record
-            tools.generate(csv_input=csv_out, images_dir=images_dir, output_path=output_path, classes=self.classes)
+                # generate tf.record
+                tools.generate(csv_input=csv_out, images_dir=images_dir, output_path=output_path, classes=self.classes)
 
     def save_csv(self, csv_out):
         with open(csv_out, 'w') as file:
@@ -203,8 +231,15 @@ class Finder:
                 file.write(out)
 
     def bbox_test(self, target, n=4, thickness=3):
-        tools.bbox_test(address=self.out_dir, target=target,
-                        n=n, thickness=thickness)
+        lst = self.table["Images"].tolist()
+        select = np.where(np.array(lst) > 0)[0]
+        if len(select) > 0:
+            available = dict([(0, "train"), (1, "validation"), (2, "test")]).get(select[0])
+            if target.lower() == available:
+                tools.bbox_test(address=self.out_dir, target=target, n=n, thickness=thickness)
+            else:
+                tools.write("using {} instead of {}".format(available, target))
+                tools.bbox_test(address=self.out_dir, target=available, n=n, thickness=thickness)
 
     def search(self, subject, etc, just):
         self._search_begin(subject=subject)
@@ -255,15 +290,14 @@ class Finder:
 
     def _extract_data_frame(self, folder_name):
         bbox_df = dumper.annotation_loader(folder_name=folder_name, dir_=self.input_dir)
-        for label in self._search_result:
-            self.image_df = self.image_df.append(bbox_df.loc[
-                                                     (bbox_df['LabelName'] == label) &
-                                                     (bbox_df["IsGroupOf"].isin(self.is_group)) &
-                                                     (bbox_df["IsDepiction"].isin(self.is_depiction)) &
-                                                     (bbox_df["IsOccluded"].isin(self.is_occluded)) &
-                                                     (bbox_df["IsTruncated"].isin(self.is_truncated)) &
-                                                     (bbox_df["IsInside"].isin(self.is_inside)),
-                                                     ['ImageID', 'LabelName', 'XMin', 'YMin', 'XMax', 'YMax']])
+        self.image_df = bbox_df.loc[
+            (bbox_df['LabelName'].isin(self._search_result)) &
+            (bbox_df["IsGroupOf"].isin(self.is_group)) &
+            (bbox_df["IsDepiction"].isin(self.is_depiction)) &
+            (bbox_df["IsOccluded"].isin(self.is_occluded)) &
+            (bbox_df["IsTruncated"].isin(self.is_truncated)) &
+            (bbox_df["IsInside"].isin(self.is_inside)),
+            ['ImageID', 'LabelName', 'XMin', 'YMin', 'XMax', 'YMax']]
 
     def _get_imgs_path_with_bboxes(self, imgs_id):
         img_dirs = dumper.img_dirs(resource=self.resource, dir_=self.input_dir)
@@ -314,21 +348,21 @@ class Finder:
 
         for img_dir in progressbar(file_names, prefix=prefix):
             save_to = join(out, img_dir) if self.resource == "jpg" else join(out, img_dir.rsplit("/")[-1])
-            save_to = save_to.replace('\\', '/') if sys.platform == "win32" else save_to
-            imread = join(folders, img_dir) if self.resource == "jpg" else img_dir
+            save_to = save_to.replace('\\', '/') if platform == "win32" else save_to
+            img_dir = join(folders, img_dir) if self.resource == "jpg" else img_dir
 
             if not exists(save_to):
-                img = cv2.imread(imread) if self.resource == "jpg" else imageio.imread(imread)
+                img = cvread(img_dir) if self.resource == "jpg" else imread(img_dir)
             else:
-                img = cv2.imread(save_to)
+                img = cvread(save_to)
 
             if isinstance(self.size, tuple):
-                img = cv2.resize(img, self.size)
+                img = resize(img, self.size)
 
             height, width, _ = img.shape
-            fnd = np.where(self.data[:, config.IMG] == imread)
+            fnd = np.where(self.data[:, config.IMG] == img_dir)
             ret = np.append(ret, [fnd, width, height])
-            cv2.imwrite(save_to, img)
+            cvwrite(save_to, img)
 
         ret = ret.reshape((-1, 3))
         return ret if self.resource == "jpg" else [ret, ]
@@ -336,11 +370,10 @@ class Finder:
 
 if __name__ == '__main__':
     import time
-
-    finder = Finder(subject='apple', is_group=False, is_depiction=False,
-                    is_occluded=False, is_truncated=False, out_dir="/home/cna/Desktop")
+    finder = Finder(is_depiction=True, is_truncated=False, is_group=False, is_occluded=False, is_inside=False,
+                    out_dir="/home/cna/", just_count_images=True)
     t1 = time.time()
-    finder.extract_images(dirs=("Validation",))
+    finder.extract_images()
     t2 = time.time()
     finder.bbox_test(target="Validation", n=2, thickness=6)
     print(finder.table)

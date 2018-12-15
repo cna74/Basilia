@@ -2,6 +2,8 @@
   <dictionary name="cna">
     <words>
       <w>basilia</w>
+      <w>cvread</w>
+      <w>cvwrite</w>
       <w>idxs</w>
       <w>imread</w>
       <w>imwrite</w>

@@ -63,9 +63,17 @@ if you want to use online just download [csv](https://github.com/cna74/Basilia/b
 ## edit `config.py`
 - change directory to utils folder `cd ~/Basilia/utils/`
 - open `config.py`
-    - `DATA_DIR="<path-to-open-image-directory>"`
-    - if you downloaded zip files and extracted them `RESOURCE=jpg`
-    - if you just downloaded csv files `RESOURCE=csv`
+  ```python
+  DATA_DIR="<path-to-open-image-directory>"
+  # if you downloaded zip files and extracted them
+  RESOURCE="jpg"
+  # if you just downloaded csv files
+  RESOURCE="csv"
+  ```
 - open jupyter `jupyter lab` or `jupyter notebook`
 
-![](https://github.com/cna74/Basilia/blob/master/Demo.png)
+  ```python
+  from Basil import Finder
+  finder = Finder(subject=("fox", "tiger", "Jaguar"), out_dir="/home/cna/Desktop/", automate=True)
+  ```
+more examples in https://github.com/cna74/Basilia/blob/master/Demo.ipynb

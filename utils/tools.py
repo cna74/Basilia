@@ -11,10 +11,11 @@ import cv2
 LABELS = dumper.label_loader(dir_=config.DATA_DIR)
 
 
-def write(s):
-    sys.stdout.write(s)
-    sys.stdout.write("\n")
-    sys.stdout.flush()
+def write(s, condition=True):
+    if condition:
+        sys.stdout.write(s)
+        sys.stdout.write("\n")
+        sys.stdout.flush()
 
 
 def dict_of_all_classes() -> dict:
@@ -35,13 +36,13 @@ def dict_of_all_classes() -> dict:
 
 def mid_to_string(mid_or_name) -> str:
     if mid_or_name.startswith('/m'):
-        sel = LABELS.loc[LABELS['code'] == mid_or_name]
-        sel = sel.to_dict()
-        return list(sel['code'].keys())[0]
+        selected = LABELS.loc[LABELS['code'] == mid_or_name]
+        selected = selected.to_dict()
+        return list(selected['code'].keys())[0]
     else:
-        sel = LABELS.loc[mid_or_name]
-        sel = sel.to_dict()
-        return sel['code']
+        selected = LABELS.loc[mid_or_name]
+        selected = selected.to_dict()
+        return selected['code']
 
 
 def draw(img, bboxes, thickness):
@@ -52,10 +53,7 @@ def draw(img, bboxes, thickness):
 
 
 def generate(csv_input, output_path, images_dir, classes):
-    tf_generator.main(csv_input=csv_input,
-                      output_path=output_path,
-                      images_dir=images_dir,
-                      classes=classes)
+    tf_generator.main(csv_input=csv_input, output_path=output_path, images_dir=images_dir, classes=classes)
 
 
 def bbox_test(address, target, n=2, thickness=3):
@@ -85,6 +83,4 @@ def bbox_test(address, target, n=2, thickness=3):
 
 
 if __name__ == "__main__":
-    # bbox_test(address="/home/cna/PycharmProjects/Basilia/utils/data")
-    d = dict_of_all_classes()
-    print(d.get("Fruit"))
+    pass
