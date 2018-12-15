@@ -70,7 +70,7 @@ if you want to use online just download [csv](https://github.com/cna74/Basilia/b
   # if you just downloaded csv files
   RESOURCE="csv"
   ```
-- open jupyter `jupyter lab` or `jupyter notebook`
+- from directory `~/Basilia/`:
 
   ```python
   from Basil import Finder
