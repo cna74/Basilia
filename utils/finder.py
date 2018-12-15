@@ -13,24 +13,54 @@ import sys
 
 
 class Finder:
-    def __init__(self, subject, resource=None, input_dir=None, out_dir=None,
-                 just=False, etc=True, size=None, is_group=None):
+    def __init__(self, subject, resource=config.RESOURCE, input_dir=config.DATA_DIR,
+                 out_dir=None, just=False, etc=True, is_group=None, is_occluded=None,
+                 is_truncated=None, size=None, is_depiction=None, automate=False,
+                 is_inside=None):
         """
-        :param subject: subject's name that should be in `tools.dict_of_classes()`
-        :param resource: "jpg" if images are downloaded already
-                         "csv" if need to download the selected subjects
-        :param input_dir: Open-Image DataSet directory path
-        :param out_dir: where to save images, out_dir=join(out_dir, "data")
-        :param size: None uses original size of images and saves them in out_dir [recommended]
-                     tuple resize images to this and saves them in out_dir
-        :param just: True search_result=[subject,]
-                     False doesn't affect on search procedure
-        :param etc: True and subject has sub-class search_result include and all of the sub-classes, [recommended]
-                    False and subject does't have any sub-class search_result would be empty,
-                    look at examples
-        :param is_group: True finder will search for bboxes that represent a group of object in a bbox
-                         False finder will search for bboxes that represent a single object in bbox
-                         None finder will search for both type of bboxes (single and grouped) [recommended]
+        extract desired images with given conditions
+        :param subject:
+            subject's name that should be in `tools.dict_of_classes()`
+        :param resource:
+            "jpg" if images are downloaded already
+            "csv" if need to download the selected subjects
+        :param input_dir:
+            `Open-Image` DataSet directory path
+        :param out_dir:
+            where to save images, out_dir=join(out_dir, "data")
+        :param size:
+            None uses original size of images and saves them in out_dir [Default]
+            tuple resize images to this and saves them in out_dir
+        :param just:
+            True search_result=[subject,]
+            False doesn't affect on search procedure
+        :param etc:
+            True and subject has sub-class search_result include and all of the sub-classes, [Default]
+            False and subject does't have any sub-class search_result would be empty,
+            look at examples
+        :param is_group:
+            True finder will search for bboxes that represent a group of object in a bbox
+            False finder will search for bboxes that represent a single object in bbox
+            None finder will search for both type of bboxes (single and grouped) [Default]
+        :param is_occluded:
+            True Indicates that the object is occluded by another object in the image
+            False object is't occluded by another object in the image
+            None both of situation [Default]
+        :param is_truncated:
+            True Indicates that the object extends beyond the boundary of the image
+            False Indicates that all part of the object is in boundary of the image
+        :param is_depiction:
+            True Indicates that the object is a depiction (e.g., a cartoon or drawing of the object,
+                                                           not a real physical instance).
+            False object is not depiction
+            None both of situation [Default]
+        :param is_inside:
+            True Indicates a picture taken from the inside of the object (e.g., a car interior or inside of a building).
+            False object is not inside
+            None both of situation [Default]
+
+        :param automate: True automate all steps of finder LIKE A BOSS!!!
+                         False [Default]
 
         Examples ------------------------------------------------------------------------------------------
 
@@ -53,30 +83,37 @@ class Finder:
                         Tomato, Watermelon, Common fig, Pineapple, Mango, Pomegranate, Orange, Peach, Cantaloupe,
                         Pear) and the fruits(other type of fruits) in original size
         """
-
         self.subject = subject
         self.etc = etc
         self.just = just
         self.size = size
-        self.is_group =is_group
+        self.is_group = self.is_depiction = self.is_inside = self.is_truncated = self.is_occluded = ["0", "1"]
         # MID type of result
         self._search_result = []
         # Str type of result
         self.search_result = []
         # empty numpy array and data frame to append later
         self.image_df = pd.DataFrame({config.HEADERS.get(i): [] for i in config.DF_COLS})
-        self.table = pd.DataFrame(index=["Train", "Validation", "Test"],
-                                  columns=['# Images', '# Objects'])
+        self.table = pd.DataFrame(index=["Train", "Validation", "Test"], columns=['# Images', '# Objects'])
         self.data = np.delete(np.empty((1, config.ROW_LENGTH)), 0, 0)
         # directory to save images and data
         self.out_dir = out_dir
         # resources should be jpg or csv
-        self.resource = resource if resource is not None else config.RESOURCE
+        self.resource = resource
         # Open-Image DataSet path
-        self.input_dir = input_dir if input_dir is not None else config.DATA_DIR
-        self.dirs = ("Validation", "Test", "Train")
+        self.input_dir = input_dir
+        self.dirs = ("Train", "Validation", "Test")
+
         if isinstance(is_group, bool):
-            self.is_group = "1" if is_group else "0"
+            self.is_group = ["1", ] if is_group else ["0", ]
+        if isinstance(is_depiction, bool):
+            self.is_depiction = ["1", ] if is_depiction else ["0", ]
+        if isinstance(is_inside, bool):
+            self.is_inside = ["1", ] if is_inside else ["0", ]
+        if isinstance(is_truncated, bool):
+            self.is_truncated = ["1", ] if is_truncated else ["0", ]
+        if isinstance(is_occluded, bool):
+            self.is_occluded = ["1", ] if is_occluded else ["0", ]
 
         if self.out_dir:
             self.out_dir = join(self.out_dir, 'data')
@@ -91,11 +128,19 @@ class Finder:
 
         if isinstance(subject, str):
             self.search(subject=subject.capitalize(), etc=self.etc, just=self.just)
-            self._search_fill_result()
+            self._fill_search_result()
+        elif isinstance(subject, (tuple, list)):
+            for subj in subject:
+                self.search(subject=subj.capitalize(), etc=self.etc, just=self.just)
+                self._fill_search_result()
+            self._search_result = [tools.mid_to_string(s) for s in self.search_result]
         else:
-            raise ValueError("subject excepted str but got {}".format(type(subject).__name__))
+            raise ValueError("subject excepted str or iterable(tuple, list) but got {}".format(type(subject).__name__))
 
         self.classes = dict([(cls, i) for i, cls in enumerate(self.search_result, start=1)])
+        if automate:
+            self.extract_images()
+            self.bbox_test(target="validation")
 
     def extract_images(self, dirs=None, threads=multiprocessing.cpu_count()):
         dirs = dirs if dirs is not None and isinstance(dirs, tuple) else self.dirs
@@ -115,7 +160,7 @@ class Finder:
 
             self._get_imgs_path_with_bboxes(imgs_id=imgs_id)
             b = len(self.data)
-            print("{} objects")
+            print("{} objects".format(b))
 
             self.table.loc[out] = a, b
 
@@ -134,7 +179,7 @@ class Finder:
 
             for folder in result:
                 for row in folder:
-                    self.data[row[0], config.WIDTH:config.HEIGHT+1] = row[1], row[2]
+                    self.data[row[0], config.WIDTH:config.HEIGHT + 1] = row[1], row[2]
 
             self.save_csv(csv_out=csv_out)
             # save some memory for next step
@@ -162,10 +207,10 @@ class Finder:
                         n=n, thickness=thickness)
 
     def search(self, subject, etc, just):
-        self._search_step1(subject=subject)
-        self._search_step2(subject=subject, etc=etc, just=just)
+        self._search_begin(subject=subject)
+        self._search_harvest(subject=subject, etc=etc, just=just)
 
-    def _search_step1(self, subject, json=None):
+    def _search_begin(self, subject, json=None):
         subject = subject.capitalize()
         if not json:
             self._search_result = []
@@ -182,11 +227,11 @@ class Finder:
 
             elif len(node.keys()) > 1:
                 if 'Subcategory' in node.keys():
-                    self._search_step1(subject=subject, json=node['Subcategory'])
+                    self._search_begin(subject=subject, json=node['Subcategory'])
                 elif 'Part' in node.keys():
-                    self._search_step1(subject=subject, json=node['Part'])
+                    self._search_begin(subject=subject, json=node['Part'])
 
-    def _search_step2(self, subject, etc, just):
+    def _search_harvest(self, subject, etc, just):
         if just:
             self._search_result = [tools.mid_to_string(subject), ]
         else:
@@ -202,20 +247,23 @@ class Finder:
                 elif 'Part' in i.keys():
                     self._search_dig(i['Part'])
 
-    def _search_fill_result(self):
-        tmp = []
+    def _fill_search_result(self):
+        tmp = set()
         for i in self._search_result:
-            tmp.append(tools.mid_to_string(i))
-        self.search_result = set(tmp)
+            tmp.add(tools.mid_to_string(i))
+        self.search_result.extend(tmp)
 
     def _extract_data_frame(self, folder_name):
         bbox_df = dumper.annotation_loader(folder_name=folder_name, dir_=self.input_dir)
-        for i in self._search_result:
-            if isinstance(self.is_group, str):
-                self.image_df = self.image_df.append(
-                    bbox_df.loc[(bbox_df['LabelName'] == i) & (bbox_df["IsGroupOf"] == self.is_group)])
-            else:
-                self.image_df = self.image_df.append(bbox_df.loc[bbox_df['LabelName'] == i])
+        for label in self._search_result:
+            self.image_df = self.image_df.append(bbox_df.loc[
+                                                     (bbox_df['LabelName'] == label) &
+                                                     (bbox_df["IsGroupOf"].isin(self.is_group)) &
+                                                     (bbox_df["IsDepiction"].isin(self.is_depiction)) &
+                                                     (bbox_df["IsOccluded"].isin(self.is_occluded)) &
+                                                     (bbox_df["IsTruncated"].isin(self.is_truncated)) &
+                                                     (bbox_df["IsInside"].isin(self.is_inside)),
+                                                     ['ImageID', 'LabelName', 'XMin', 'YMin', 'XMax', 'YMax']])
 
     def _get_imgs_path_with_bboxes(self, imgs_id):
         img_dirs = dumper.img_dirs(resource=self.resource, dir_=self.input_dir)
@@ -288,9 +336,11 @@ class Finder:
 
 if __name__ == '__main__':
     import time
-    finder = Finder(subject='banana', etc=True, is_group=True, out_dir="/home/cna/Desktop")
+
+    finder = Finder(subject='apple', is_group=False, is_depiction=False,
+                    is_occluded=False, is_truncated=False, out_dir="/home/cna/Desktop")
     t1 = time.time()
-    finder.extract_images(dirs=("Validation", ))
+    finder.extract_images(dirs=("Validation",))
     t2 = time.time()
     finder.bbox_test(target="Validation", n=2, thickness=6)
     print(finder.table)

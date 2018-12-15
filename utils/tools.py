@@ -59,6 +59,7 @@ def generate(csv_input, output_path, images_dir, classes):
 
 
 def bbox_test(address, target, n=2, thickness=3):
+    target = target.title()
     file = "{}_bbox.csv".format(target.title())
     csv = np.genfromtxt("{}/{}/{}".format(address, "records", file), delimiter=",", skip_header=1, dtype=str)
     dir_ = join(address, "images", target)
@@ -66,7 +67,7 @@ def bbox_test(address, target, n=2, thickness=3):
     selected = np.random.choice(images, n*n, replace=False)
     del images, dir_
 
-    plt.figure(figsize=(10, 10))
+    plt.figure(figsize=(15, 10))
     for idx, img_dir in enumerate(selected, start=1):
         img = plt.imread(img_dir)
         res = csv[np.where(csv[:, config.IMG] == img_dir.rsplit("/")[-1])]
