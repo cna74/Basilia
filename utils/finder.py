@@ -371,12 +371,4 @@ class Finder:
 
 
 if __name__ == '__main__':
-    import time
-    finder = Finder(is_depiction=True, is_truncated=False, is_group=False, is_occluded=False, is_inside=False,
-                    out_dir="/home/cna/", just_count_images=True)
-    t1 = time.time()
-    finder.extract_images()
-    t2 = time.time()
-    finder.bbox_test(target="Validation", n=2, thickness=6)
-    print(finder.table)
-    print('multiprocessing took: {}'.format(t2 - t1))
+    Finder(subject="fruit", out_dir="/home/cna/", just_count_images=True, automate=True)

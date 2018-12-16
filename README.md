@@ -74,14 +74,25 @@ if you want to use online just download [csv](https://github.com/cna74/Basilia/b
 
   ```python
   from Basil import Finder
-  
   # find Punching bags
   finder = Finder(subject="Punching bag", out_dir="/home/cna/Desktop/", automate=True)
-  
+  ```
+  ![Punching bag](https://drive.google.com/open?id=1UZ_gCJh-_IECnxfp_36P-j14VzpLNNd7)
+  ```python
+  from Basil import Finder
   # find fox, tiger and jaguar
-  finder = Finder(subject=("fox", "tiger", "Jaguar"), out_dir="/home/cna/Desktop/", automate=True)
-  
+  Finder(subject=("fox", "tiger", "Jaguar"), out_dir="/home/cna/Desktop/", automate=True)
+  ```
+  ![](https://drive.google.com/open?id=140UX50uhYI_L3KQbzdhN7K4MXr1Ps4bq)  
+  ```python
+  from Basil import Finder
   # just count all type of fruits, won't extract them
-  finder = Finder(subject="fruit", out_dir="/home/cna/Desktop/", just_count_images=True, automate=True)
+  Finder(subject="fruit", out_dir="/home/cna/Desktop/", just_count_images=True, automate=True)
+  '''  just count images:
+            Images  Objects
+  Train        13271        0
+  Validation     786        0
+  Test          2545        0
+  '''
   ```
 more examples in https://github.com/cna74/Basilia/blob/master/Demo.ipynb
