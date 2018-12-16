@@ -77,13 +77,13 @@ if you want to use online just download [csv](https://github.com/cna74/Basilia/b
   # find Punching bags
   finder = Finder(subject="Punching bag", out_dir="/home/cna/Desktop/", automate=True)
   ```
-  ![Punching bag](https://github.com/cna74/Basilia/.imgs/output_1_9.png)
+  ![Punching bag](https://github.com/cna74/Basilia/blob/master/.imgs/output_1_9.png)
   ```python
   from Basil import Finder
   # find fox, tiger and jaguar
   Finder(subject=("fox", "tiger", "Jaguar"), out_dir="/home/cna/Desktop/", automate=True)
   ```
-  ![Animals](https://github.com/cna74/Basilia/.imgs/output_7_13.png)  
+  ![Animals](https://github.com/cna74/Basilia/blob/master/.imgs/output_7_13.png)  
   ```python
   from Basil import Finder
   # just count all type of fruits, won't extract them
