@@ -1,5 +1,5 @@
 # Basilia
-An API for [Open-Image-V4](https://www.figure-eight.com/dataset/open-images-annotated-with-bounding-boxes/) to gather your labeld bbox images in just **TWO LINE OF CODE**
+An API for [Open-Image-V4](https://www.figure-eight.com/dataset/open-images-annotated-with-bounding-boxes/) to gather your desired images with bboxes in just **TWO LINE OF CODE**
 ## Downloading DataSet
 
 if you want to use online just download [csv](https://github.com/cna74/Basilia/blob/master/#csv) and [json](https://github.com/cna74/Basilia/blob/master/#)
