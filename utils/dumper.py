@@ -7,11 +7,16 @@ import pandas as pd
 import numpy as np
 import json
 import sys
+import os
 """
 dump the origin dataset's csv files
 """
 
-DUMP_DIR = join(split(__file__)[0], "dumped")
+DUMP_DIR = join(split(__file__)[0], os.sep, "dumped")
+try:
+    os.makedirs(DUMP_DIR)
+except:
+    pass
 
 
 def annotation_loader(dir_, folder_name) -> pd.DataFrame:
@@ -22,7 +27,6 @@ def annotation_loader(dir_, folder_name) -> pd.DataFrame:
         dst = join(dir_, '{}/{}-annotations-bbox.csv'.format(folder_name, folder_name.lower()))
         df = pd.read_csv(dst,  usecols=config.DF_COLS, dtype='str')
         df.to_pickle(dumped)
-
     return df
 
 
