@@ -12,7 +12,7 @@ import os
 dump the origin dataset's csv files
 """
 
-DUMP_DIR = join(split(__file__)[0], os.sep, "dumped")
+DUMP_DIR = join(os.sep, split(__file__)[0], "dumped")
 try:
     os.makedirs(DUMP_DIR)
 except:
