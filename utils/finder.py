@@ -1,16 +1,16 @@
-from cv2 import resize, imread as cvread, imwrite as cvwrite
 from multiprocessing import Pool, cpu_count
 from os.path import split, join, exists
 from utils import dumper, config, tools
 import numpy.core.defchararray as char
 from progressbar import progressbar
 from pandas import DataFrame
-from imageio import imread
 from shutil import rmtree
 from sys import platform
 from os import makedirs
 from glob2 import glob
 import numpy as np
+import imageio
+import cv2
 
 
 class Finder:
@@ -356,17 +356,19 @@ class Finder:
             img_dir = join(folders, img_dir) if self.resource == "jpg" else img_dir
 
             if not exists(save_to):
-                img = cvread(img_dir) if self.resource == "jpg" else imread(img_dir)
+                img = cv2.imread(img_dir) if self.resource == "jpg" else imageio.imread(img_dir)
             else:
-                img = cvread(save_to)
+                img = cv2.imread(save_to)
 
             if isinstance(self.size, tuple):
-                img = resize(img, self.size)
+                img = cv2.resize(img, self.size)
+                if self.resource == "csv":
+                    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
             height, width = img.shape[:2]
             fnd = np.where(self.data[:, config.IMG] == img_dir)
             ret = np.append(ret, [fnd, width, height])
-            cvwrite(save_to, img)
+            cv2.imwrite(save_to, img)
 
         ret = ret.reshape((-1, 3))
         return ret if self.resource == "jpg" else [ret, ]
