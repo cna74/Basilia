@@ -129,12 +129,14 @@ class Finder:
             if out_dir:
                 self.out_dir = join(out_dir, 'data')
             if exists(self.out_dir):
-                y_n = input("{} is already exist, remove files and folders in it?(y/n)".format(self.out_dir))
+                y_n = input("{} is already exist,\n"
+                            "(y) remove files and folders in it\n"
+                            "(Enter) i was working on this dir now i want to resume\n"
+                            "(y/n)?".format(self.out_dir))
                 if y_n == "y":
                     rmtree(self.out_dir)
                 else:
-                    print("move {} directory to somewhere save or remove it".format(self.out_dir))
-                    exit()
+                    print("resuming ")
             else:
                 makedirs(self.out_dir)
             for d in ["images/Train", "images/Validation", "images/Test", "records"]:
@@ -362,8 +364,9 @@ class Finder:
 
             if isinstance(self.size, tuple):
                 img = cv2.resize(img, self.size)
-                if self.resource == "csv":
-                    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+            if self.resource == "csv":
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
             height, width = img.shape[:2]
             fnd = np.where(self.data[:, config.IMG] == img_dir)
