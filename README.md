@@ -55,17 +55,14 @@ if you want to use online just download [csv](https://github.com/cna74/Basilia/b
 
 ## install Basilia
 - clone repo `git clone https://github.com/cna74/Basilia.git`
-- go to  directory `cd Basilia`
-- install requirements `pip install -r requierments.txt`
+- install requirements `pip install -r Basilia/requierments.txt`
 
 ## install object-detection-api
 - clone repo `git clone https://github.com/tensorflow/models.git`
-- go to research directory `cd models/research/`
-- install object-detection-api `python3 setup.py install`
+- install object-detection-api `python3 models/research/setup.py install`
 
 ## edit `config.py`
-- change directory to utils folder `cd utils/`
-- open `config.py`
+- open `Basilia/utils/config.py`
   ```python
   DATA_DIR="<path-to-open-image-directory>"
   # if you downloaded zip files and extracted them
