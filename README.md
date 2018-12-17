@@ -53,15 +53,15 @@ if you want to use online just download [csv](https://github.com/cna74/Basilia/b
 - `conda create -n ElBasil python=3.6`
 - `source activate ElBasil`
 
-## install object-detection-api
-- clone repo `git clone https://github.com/tensorflow/models.git`
-- go to research directory `cd models/research/`
-- install object-detection-api `python3 setup.py install`
-
 ## install Basilia
 - clone repo `git clone https://github.com/cna74/Basilia.git`
 - go to  directory `cd Basilia`
 - install requirements `pip install -r requierments.txt`
+
+## install object-detection-api
+- clone repo `git clone https://github.com/tensorflow/models.git`
+- go to research directory `cd models/research/`
+- install object-detection-api `python3 setup.py install`
 
 ## edit `config.py`
 - change directory to utils folder `cd utils/`
