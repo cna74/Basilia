@@ -3,13 +3,13 @@ from multiprocessing import Pool, cpu_count
 from os.path import split, join, exists
 from utils import dumper, config, tools
 import numpy.core.defchararray as char
-from progressbar import progressbar
 from pandas import DataFrame
 from imageio import imread
 from shutil import rmtree
 from sys import platform
 from os import makedirs
 from glob2 import glob
+from tqdm import tqdm
 import numpy as np
 
 
@@ -126,20 +126,26 @@ class Finder:
         # endregion
 
         # region out_dir
-        if self.out_dir:
-            self.out_dir = join(self.out_dir, 'data')
-        else:
-            self.out_dir = join(split(__name__)[0], 'data')
-        try:
-            rmtree(self.out_dir)
-        except FileNotFoundError:
-            pass
-        if not exists(self.out_dir):
-            makedirs(self.out_dir)
-        for d in ["images/Train", "images/Validation", "images/Test", "records"]:
-            mkd = join(self.out_dir, d)
-            if not exists(mkd):
-                makedirs(mkd)
+        if not just_count_images:
+            if self.out_dir:
+                self.out_dir = join(self.out_dir, 'data')
+            else:
+                self.out_dir = join(split(__name__)[0], 'data')
+            try:
+                y_n = input("{} is already exist, remove files and folders in it?(y/n)".format(self.out_dir))
+                if y_n == "y":
+                    rmtree(self.out_dir)
+                else:
+                    print("move {} directory to somewhere save or remove it".format(self.out_dir))
+                    exit()
+            except FileNotFoundError:
+                pass
+            if not exists(self.out_dir):
+                makedirs(self.out_dir)
+            for d in ["images/Train", "images/Validation", "images/Test", "records"]:
+                mkd = join(self.out_dir, d)
+                if not exists(mkd):
+                    makedirs(mkd)
         # endregion
 
         # region subject
@@ -303,7 +309,7 @@ class Finder:
 
     def _get_imgs_path_with_bboxes(self, imgs_id):
         img_dirs = dumper.img_dirs(resource=self.resource, dir_=self.input_dir)
-        for path in progressbar(img_dirs, prefix="find objects"):
+        for path in tqdm(img_dirs, desc="find objects"):
             name = None
 
             if self.resource == "jpg":
@@ -348,7 +354,7 @@ class Finder:
             file_names = np.unique(self.data[:, config.IMG])
             prefix = "Downloading "
 
-        for img_dir in progressbar(file_names, prefix=prefix):
+        for img_dir in tqdm(file_names, desc=prefix):
             save_to = join(out, img_dir) if self.resource == "jpg" else join(out, img_dir.rsplit("/")[-1])
             save_to = save_to.replace('\\', '/') if platform == "win32" else save_to
             img_dir = join(folders, img_dir) if self.resource == "jpg" else img_dir

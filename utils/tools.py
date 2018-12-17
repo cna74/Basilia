@@ -26,7 +26,7 @@ def dict_of_all_classes() -> dict:
         raw = list(set([i[0] for i in LABELS.itertuples()]))
         classes = {}
         for i, j in enumerate(raw):
-            fnd = finder.Finder(subject=j, etc=True, resource=config.RESOURCE)
+            fnd = finder.Finder(subject=j, etc=True, resource=config.RESOURCE, just_count_images=True)
             result = sorted(list(fnd.search_result))
             if not len(result) == 1:
                 classes.update({j: result})
@@ -83,4 +83,5 @@ def bbox_test(address, target, n=2, thickness=3):
 
 
 if __name__ == "__main__":
+    # print(dict_of_all_classes())
     pass
