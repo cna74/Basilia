@@ -11,6 +11,7 @@ glob2==0.6
 grpcio==1.17.1
 h5py==2.8.0
 imageio==2.4.1
+jupyter==1.0.0
 Keras-Applications==1.0.6
 Keras-Preprocessing==1.0.5
 kiwisolver==1.0.1
