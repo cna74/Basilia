@@ -3,13 +3,13 @@ from multiprocessing import Pool, cpu_count
 from os.path import split, join, exists
 from utils import dumper, config, tools
 import numpy.core.defchararray as char
+from progressbar import progressbar
 from pandas import DataFrame
 from imageio import imread
 from shutil import rmtree
 from sys import platform
 from os import makedirs
 from glob2 import glob
-from tqdm import tqdm
 import numpy as np
 
 
@@ -105,6 +105,7 @@ class Finder:
         # resources should be jpg or csv
         self.resource = resource
         # Open-Image DataSet path
+        self.out_dir = out_dir
         self.input_dir = input_dir
         self.dirs = ("Train", "Validation", "Test")
         # endregion
@@ -162,6 +163,7 @@ class Finder:
 
         # region automate
         if automate:
+            print("searching for {}".format(self.search_result))
             self.extract_images()
             if not self.just_count_images:
                 self.bbox_test(target="train", n=4, thickness=8)
@@ -303,7 +305,7 @@ class Finder:
 
     def _get_imgs_path_with_bboxes(self, imgs_id):
         img_dirs = dumper.img_dirs(resource=self.resource, dir_=self.input_dir)
-        for path in tqdm(img_dirs, desc="find objects"):
+        for path in progressbar(img_dirs, prefix="find objects"):
             name = None
 
             if self.resource == "jpg":
@@ -348,7 +350,7 @@ class Finder:
             file_names = np.unique(self.data[:, config.IMG])
             prefix = "Downloading "
 
-        for img_dir in tqdm(file_names, desc=prefix):
+        for img_dir in progressbar(file_names, prefix=prefix):
             save_to = join(out, img_dir) if self.resource == "jpg" else join(out, img_dir.rsplit("/")[-1])
             save_to = save_to.replace('\\', '/') if platform == "win32" else save_to
             img_dir = join(folders, img_dir) if self.resource == "jpg" else img_dir
@@ -361,7 +363,7 @@ class Finder:
             if isinstance(self.size, tuple):
                 img = resize(img, self.size)
 
-            height, width, _ = img.shape
+            height, width = img.shape[:2]
             fnd = np.where(self.data[:, config.IMG] == img_dir)
             ret = np.append(ret, [fnd, width, height])
             cvwrite(save_to, img)
@@ -371,4 +373,4 @@ class Finder:
 
 
 if __name__ == '__main__':
-    Finder(subject="fruit", out_dir="/home/cna/", just_count_images=True, automate=True)
+    Finder(subject="Punching bag", out_dir="/home/cna/Desktop/", automate=True)

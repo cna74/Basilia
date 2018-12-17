@@ -31,30 +31,24 @@ def annotation_loader(dir_, folder_name) -> pd.DataFrame:
 
 
 def img_dirs(resource, dir_) -> np.ndarray:
-    dumped = join(DUMP_DIR, "img_dirs.npy")
-    if exists(dumped):
-        dirs = np.load(dumped)
+    if resource == "jpg":
+        pathname = dir_+"*/*/*.jpg"
+        if sys.platform == "win32":
+            pathname = pathname.replace("\\", "/")
+        dirs = glob(pathname=pathname)
+        dirs = np.array(dirs)
+    elif resource == "csv":
+        pathname = dir_+"*/*images*.csv"
+        if sys.platform == "win32":
+            pathname = pathname.replace("\\", "/")
+        dirs = glob(pathname=pathname)
+        dfs = np.array(['image_name', 'image_url'])
+        for c in dirs:
+            dfs = np.append(dfs, genfromtxt(c, dtype=np.str, delimiter=",")[1:])
+        dirs = dfs.reshape((-1, 2))[1:]
+        dirs[:, 0] = char.replace(dirs[:, 0], ".jpg", "")
     else:
-        if resource == "jpg":
-            pathname = dir_+"*/*/*.jpg"
-            if sys.platform == "win32":
-                pathname = pathname.replace("\\", "/")
-            dirs = glob(pathname=pathname)
-            dirs = np.array(dirs)
-            np.save(dumped, dirs)
-        elif resource == "csv":
-            pathname = dir_+"*/*images*.csv"
-            if sys.platform == "win32":
-                pathname = pathname.replace("\\", "/")
-            dirs = glob(pathname=pathname)
-            dfs = np.array(['image_name', 'image_url'])
-            for c in dirs:
-                dfs = np.append(dfs, genfromtxt(c, dtype=np.str, delimiter=",")[1:])
-            dfs = dfs.reshape((-1, 2))[1:]
-            dfs[:, 0] = char.replace(dfs[:, 0], ".jpg", "")
-            np.save(dumped, dfs)
-        else:
-            raise FileNotFoundError("can't find {} images".format(resource))
+        raise FileNotFoundError("can't find {} images".format(resource))
     return dirs
 
 
