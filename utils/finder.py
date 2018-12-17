@@ -89,7 +89,6 @@ class Finder:
         """
 
         # region params
-        self.subject = subject
         self.etc = etc
         self.just = just
         self.size = size
@@ -103,8 +102,6 @@ class Finder:
         self.image_df = None
         self.table = DataFrame(index=["Train", "Validation", "Test"], columns=['Images', 'Objects'], dtype=int)
         self.data = np.delete(np.empty((1, config.ROW_LENGTH)), 0, 0)
-        # directory to save images and data
-        self.out_dir = out_dir
         # resources should be jpg or csv
         self.resource = resource
         # Open-Image DataSet path
@@ -127,20 +124,17 @@ class Finder:
 
         # region out_dir
         if not just_count_images:
-            if self.out_dir:
-                self.out_dir = join(self.out_dir, 'data')
-            else:
-                self.out_dir = join(split(__name__)[0], 'data')
-            try:
+            self.out_dir = join(split(__name__)[0], 'data')
+            if out_dir:
+                self.out_dir = join(out_dir, 'data')
+            if exists(self.out_dir):
                 y_n = input("{} is already exist, remove files and folders in it?(y/n)".format(self.out_dir))
                 if y_n == "y":
                     rmtree(self.out_dir)
                 else:
                     print("move {} directory to somewhere save or remove it".format(self.out_dir))
                     exit()
-            except FileNotFoundError:
-                pass
-            if not exists(self.out_dir):
+            else:
                 makedirs(self.out_dir)
             for d in ["images/Train", "images/Validation", "images/Test", "records"]:
                 mkd = join(self.out_dir, d)
