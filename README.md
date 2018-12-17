@@ -54,19 +54,17 @@ if you want to use online just download [csv](https://github.com/cna74/Basilia/b
 - `source activate ElBasil`
 
 ## install object-detection-api
-- from home directory `cd ~`
 - clone repo `git clone https://github.com/tensorflow/models.git`
 - go to research directory `cd models/research/`
 - install object-detection-api `python3 setup.py install`
 
 ## install Basilia
-- from home directory `cd ~`
 - clone repo `git clone https://github.com/cna74/Basilia.git`
 - go to  directory `cd Basilia`
 - install requirements `pip install -r requierments.txt`
 
 ## edit `config.py`
-- change directory to utils folder `cd ~/Basilia/utils/`
+- change directory to utils folder `cd utils/`
 - open `config.py`
   ```python
   DATA_DIR="<path-to-open-image-directory>"
@@ -75,7 +73,7 @@ if you want to use online just download [csv](https://github.com/cna74/Basilia/b
   # if you just downloaded csv files
   RESOURCE="csv"
   ```
-- from directory `~/Basilia/`:
+- from directory `Basilia/`:
 
   ```python
   from Basil import Finder
