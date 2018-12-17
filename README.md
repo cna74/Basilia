@@ -11,7 +11,7 @@ if you want to use online just download [csv](https://github.com/cna74/Basilia/b
     |[train-annotations-bbox.csv](https://datasets.figure-eight.com/figure_eight_datasets/open-images/train-annotations-bbox.csv)|[train-images-boxable.csv](https://datasets.figure-eight.com/figure_eight_datasets/open-images/train-images-boxable.csv)|    
     |[validation-annotations-bbox.csv](https://datasets.figure-eight.com/figure_eight_datasets/open-images/validation-annotations-bbox.csv)|[validation-images.csv](https://datasets.figure-eight.com/figure_eight_datasets/open-images/validation-images.csv)|    
     |[test-annotations-bbox.csv](https://datasets.figure-eight.com/figure_eight_datasets/open-images/test-annotations-bbox.csv)|[test-images.csv](https://datasets.figure-eight.com/figure_eight_datasets/open-images/test-images.csv)|
-    |[labels](https://storage.googleapis.com/openimages/2018_04/class-descriptions-boxable.csv)|[json_hierarchy](https://storage.googleapis.com/openimages/2018_04/bbox_labels_600_hierarchy.json)|
+    |[class-descriptions-boxable.csv](https://storage.googleapis.com/openimages/2018_04/class-descriptions-boxable.csv)|[json_hierarchy](https://storage.googleapis.com/openimages/2018_04/bbox_labels_600_hierarchy.json)|
 
 - zip *: if you want to use it online zip files are't necessary
 
