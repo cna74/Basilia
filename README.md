@@ -50,7 +50,7 @@ if you want to use online just download [csv](https://github.com/cna74/Basilia/b
 ```
 
 ## create environment [optional]
-- `conda -n ElBasil python=3.6`
+- `conda create -n ElBasil python=3.6`
 - `source activate ElBasil`
 
 ## install object-detection-api
