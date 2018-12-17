@@ -76,7 +76,7 @@ if you want to use online just download [csv](https://github.com/cna74/Basilia/b
   ```python
   from Basil import Finder
   # find Punching bags
-  finder = Finder(subject="Punching bag", out_dir="/home/cna/Desktop/", automate=True)
+  Finder(subject="Punching bag", out_dir="/home/cna/Desktop/", automate=True)
   ```
   [![Punching-bag.png](https://i.postimg.cc/hPgq0ZM8/output-1-9.png)](https://postimg.cc/jC89xXpC)
   ```python
