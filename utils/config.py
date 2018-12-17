@@ -1,7 +1,7 @@
 # RESOURCE jpg or csv
-RESOURCE = "jpg"
+RESOURCE = "csv"
 
-DATA_DIR = "/media/cna/backpack/dataset/Open-Image/"
+DATA_DIR = "<Open-Image-directory>"
 
 IMG = 0
 WIDTH, HEIGHT = 1, 2
