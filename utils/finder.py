@@ -129,7 +129,7 @@ class Finder:
             if out_dir:
                 self.out_dir = join(out_dir, 'data')
             if exists(self.out_dir):
-                y_n = input("{} is already exist,\n"
+                y_n = input("\n{} is already exist,\n"
                             "(y) remove files and folders in it\n"
                             "(Enter) i was working on this dir now i want to resume\n"
                             "(y/n)?".format(self.out_dir))
@@ -255,7 +255,7 @@ class Finder:
         subject = subject.capitalize()
         if not json:
             self._search_result = []
-            json = dumper.json_loader()
+            json = dumper.json_loader(dir_=self.input_dir)
 
         for node in json:
             if node['LabelName'] == tools.mid_to_string(subject):
@@ -358,14 +358,19 @@ class Finder:
             img_dir = join(folders, img_dir) if self.resource == "jpg" else img_dir
 
             if not exists(save_to):
+                downloaded_before = False
                 img = cv2.imread(img_dir) if self.resource == "jpg" else imageio.imread(img_dir)
             else:
+                downloaded_before = True
                 img = cv2.imread(save_to)
 
             if isinstance(self.size, tuple):
                 img = cv2.resize(img, self.size)
 
-            if self.resource == "csv":
+            if len(img.shape) == 2:
+                img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+
+            if self.resource == "csv" and not downloaded_before:
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
             height, width = img.shape[:2]
@@ -378,4 +383,4 @@ class Finder:
 
 
 if __name__ == '__main__':
-    Finder(subject="Punching bag", out_dir="/home/cna/Desktop/", automate=True)
+    Finder(subject="Punching bag", out_dir="/home/cna/Desktop/", input_dir="/home/cna/Desktop/Open-Image/", automate=True)

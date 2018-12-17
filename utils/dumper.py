@@ -60,7 +60,6 @@ def label_loader(dir_) -> pd.DataFrame:
         dst = join(dir_, 'class-descriptions-boxable.csv')
         df = pd.read_csv(dst, dtype='str', names=['code', 'name'], index_col=[1])
         df.to_pickle(dumped)
-
     return df
 
 
