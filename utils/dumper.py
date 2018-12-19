@@ -27,7 +27,7 @@ def annotation_loader(dir_, folder_name) -> pd.DataFrame:
     else:
         dst = join(dir_, '{}/{}-annotations-bbox.csv'.format(folder_name, folder_name.lower()))
         df = pd.read_csv(dst,  usecols=config.DF_COLS, dtype='str')
-        df.to_pickle(dumped)
+        # df.to_pickle(dumped)
     return df
 
 
@@ -41,7 +41,7 @@ def img_dirs(resource, dir_) -> np.ndarray:
             pathname = pathname.replace("\\", "/")
         dirs = glob(pathname=pathname)
         dirs = np.array(dirs)
-        dirs.dump(dumped)
+        # dirs.dump(dumped)
 
     elif resource == "csv":
         pathname = dir_+"*/*images*.csv"
@@ -53,7 +53,7 @@ def img_dirs(resource, dir_) -> np.ndarray:
             dfs = np.append(dfs, genfromtxt(c, dtype=np.str, delimiter=",")[1:])
         dirs = dfs.reshape((-1, 2))[1:]
         dirs[:, 0] = char.replace(dirs[:, 0], ".jpg", "")
-        dirs.dump(dumped)
+        # dirs.dump(dumped)
     else:
         raise FileNotFoundError("can't find {} images".format(resource))
     return dirs

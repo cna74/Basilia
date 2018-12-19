@@ -8,7 +8,7 @@ import numpy as np
 import pickle
 import cv2
 
-LABELS = dumper.label_loader(dir_=config.DATA_DIR)
+# LABELS = dumper.label_loader(dir_=config.DATA_DIR)
 
 
 def colored_text(s, text_color=None, condition=True):
@@ -17,7 +17,8 @@ def colored_text(s, text_color=None, condition=True):
         return "{}{}{}".format(Fore.__dict__.get(text_color, Fore.RESET), s, Fore.RESET)
 
 
-def dict_of_all_classes() -> dict:
+def dict_of_all_classes(dir_=config.DATA_DIR) -> dict:
+    labels = dumper.label_loader(dir_=dir_)
     dumped = join(dumper.DUMP_DIR, "dict_of_classes.pickle")
     if exists(dumped):
         classes = pickle.load(open(dumped, "rb"))
@@ -33,13 +34,14 @@ def dict_of_all_classes() -> dict:
     return classes
 
 
-def mid_to_string(mid_or_name) -> str:
+def mid_to_string(mid_or_name, dir_=config.DATA_DIR) -> str:
+    labels = dumper.label_loader(dir_=dir_)
     if mid_or_name.startswith('/m'):
-        selected = LABELS.loc[LABELS['code'] == mid_or_name]
+        selected = labels.loc[labels['code'] == mid_or_name]
         selected = selected.to_dict()
         return list(selected['code'].keys())[0]
     else:
-        selected = LABELS.loc[mid_or_name]
+        selected = labels.loc[mid_or_name]
         selected = selected.to_dict()
         return selected['code']
 

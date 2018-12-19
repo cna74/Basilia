@@ -155,7 +155,7 @@ class Finder:
                 self._fill_search_result()
             self._search_result = [tools.mid_to_string(s) for s in self.search_result]
         elif not subject:
-            self._search_result = tools.LABELS["code"].tolist()
+            self._search_result = dumper.label_loader(dir_=self.input_dir).code.tolist()
             self._fill_search_result()
         else:
             raise ValueError("subject excepted str or iterable(tuple, list) but got {}".format(type(subject).__name__))
@@ -168,7 +168,7 @@ class Finder:
         if automate:
             self.extract_images()
             if not self.just_count:
-                self.bbox_test(thickness=8)
+                self.bbox_test(thickness=10)
             print(self.table)
         # endregion
 
@@ -254,7 +254,7 @@ class Finder:
             json = dumper.json_loader(dir_=self.input_dir)
 
         for node in json:
-            if node['LabelName'] == tools.mid_to_string(subject):
+            if node['LabelName'] == tools.mid_to_string(subject, dir_=self.input_dir):
                 self._search_result.append(node['LabelName'])
                 if len(node.keys()) > 1:
                     if 'Subcategory' in node.keys():
@@ -270,10 +270,11 @@ class Finder:
 
     def _search_harvest(self, subject, etc, just):
         if just:
-            self._search_result = [tools.mid_to_string(subject), ]
+            self._search_result = [tools.mid_to_string(subject, dir_=self.input_dir), ]
         else:
-            if not etc and tools.mid_to_string(subject) in self._search_result and len(self._search_result) > 1:
-                self._search_result.remove(tools.mid_to_string(subject))
+            if not etc and tools.mid_to_string(subject, dir_=self.input_dir) in self._search_result and len(
+                    self._search_result) > 1:
+                self._search_result.remove(tools.mid_to_string(subject, dir_=self.input_dir))
 
     def _search_dig(self, list_):
         for i in list_:
@@ -287,7 +288,7 @@ class Finder:
     def _fill_search_result(self):
         tmp = set()
         for i in self._search_result:
-            tmp.add(tools.mid_to_string(i))
+            tmp.add(tools.mid_to_string(i, dir_=self.input_dir))
         self.search_result.extend(tmp)
 
     def _extract_data_frame(self, folder_name):
@@ -329,7 +330,8 @@ class Finder:
 
         self.data = self.data.reshape((-1, config.ROW_LENGTH))
         for label in np.unique(self.data[:, config.LABEL]):
-            self.data[np.where(self.data[:, config.LABEL] == label), config.LABEL] = tools.mid_to_string(label)
+            self.data[np.where(self.data[:, config.LABEL] == label),
+                      config.LABEL] = tools.mid_to_string(label, dir_=self.input_dir)
         self.data[:, config.BBOX_SLICE] = self.data[:, config.BBOX_SLICE].astype(np.float)
         self.data[:, config.IMG] = self.data[:, config.IMG].astype(np.str)
 
