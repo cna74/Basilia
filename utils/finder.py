@@ -17,7 +17,7 @@ class Finder:
     def __init__(self, subject=None, resource=config.RESOURCE, input_dir=config.DATA_DIR,
                  out_dir=None, just=False, etc=True, is_group=None, is_occluded=None,
                  is_truncated=None, size=None, is_depiction=None, automate=False,
-                 is_inside=None, just_count_images=False):
+                 is_inside=None, just_count=False):
         """
         extract desired images with given conditions
         :param subject:
@@ -92,7 +92,7 @@ class Finder:
         self.etc = etc
         self.just = just
         self.size = size
-        self.just_count_images = just_count_images
+        self.just_count = just_count
         self.is_group = self.is_depiction = self.is_inside = self.is_truncated = self.is_occluded = ["0", "1"]
         # MID type of result
         self._search_result = []
@@ -124,7 +124,7 @@ class Finder:
         # endregion
 
         # region out_dir
-        if not just_count_images:
+        if not just_count:
             self.out_dir = join(split(__name__)[0], 'data')
             if out_dir:
                 self.out_dir = join(out_dir, 'data')
@@ -162,13 +162,13 @@ class Finder:
         # endregion
 
         self.classes = dict([(cls, i) for i, cls in enumerate(self.search_result, start=1)])
+        print(tools.colored_text("searching for {}".format(self.search_result), text_color="blue"))
 
         # region automate
         if automate:
-            print("searching for {}".format(self.search_result))
             self.extract_images()
-            if not self.just_count_images:
-                self.bbox_test(target="train", n=4, thickness=8)
+            if not self.just_count:
+                self.bbox_test(thickness=8)
             print(self.table)
         # endregion
 
@@ -176,7 +176,7 @@ class Finder:
         dirs = dirs if dirs is not None and isinstance(dirs, tuple) else self.dirs
 
         for out in dirs:
-            tools.write(out, condition=not self.just_count_images)
+            print(tools.colored_text(out, text_color="cyan", condition=not self.just_count))
             result = None
             a = b = 0
             output_path = join(self.out_dir, "records/{}.record".format(out))
@@ -187,17 +187,15 @@ class Finder:
             imgs_id = list(set((i[1] for i in self.image_df.itertuples())))
 
             a += len(imgs_id)
-            tools.write("{} images".format(a), condition=not self.just_count_images)
-            if self.just_count_images:
-                self.table.loc[out] = a, b
-                continue
+            print(tools.colored_text("{} images".format(a), text_color="green", condition=not self.just_count))
+            self.table.loc[out] = a, b
             if a > 0:
                 self._get_imgs_path_with_bboxes(imgs_id=imgs_id)
             b += len(self.data)
-            tools.write("{} objects".format(b))
+            print(tools.colored_text("{} objects".format(b), text_color="green", condition=not self.just_count))
 
             self.table.loc[out] = a, b
-            if b > 0:
+            if b > 0 and not self.just_count:
                 if self.resource == "jpg":
                     folders = glob(self.input_dir + "{}/*/".format(out))
                     folders = char.rpartition(np.array(folders), "/")[:, 0]
@@ -236,16 +234,14 @@ class Finder:
                 out = '{},{},{},{},{},{},{},{}\n'.format(name, width, height, cls, *bbox)
                 file.write(out)
 
-    def bbox_test(self, target, n=4, thickness=3):
-        lst = self.table["Images"].tolist()
-        select = np.where(np.array(lst) > 0)[0]
-        if len(select) > 0:
-            available = dict([(0, "train"), (1, "validation"), (2, "test")]).get(select[0])
-            if target.lower() == available:
-                tools.bbox_test(address=self.out_dir, target=target, n=n, thickness=thickness)
-            else:
-                tools.write("using {} instead of {}".format(available, target))
-                tools.bbox_test(address=self.out_dir, target=available, n=n, thickness=thickness)
+    def bbox_test(self, max_=5, thickness=3):
+        select = self.table.loc[((self.table.Images > 0) & (self.table.Objects > 0))]
+        select = select.head(1)
+        if not select.empty:
+            target = select.index[0]
+            n = np.modf(np.sqrt(np.arange(select.Images[0])))[1]
+            n = int(n[np.where(n <= max_)].max())
+            tools.bbox_test(address=self.out_dir, target=target, n=n, thickness=thickness)
 
     def search(self, subject, etc, just):
         self._search_begin(subject=subject)
@@ -383,4 +379,5 @@ class Finder:
 
 
 if __name__ == '__main__':
-    Finder(subject="Punching bag", out_dir="/home/cna/Desktop/", input_dir="/home/cna/Desktop/Open-Image/", automate=True)
+    Finder(subject="apple", is_group=True, is_depiction=True, is_inside=True, resource="jpg",
+           out_dir="/home/cna/Desktop/", input_dir="/media/cna/backpack/dataset/Open-Image/", automate=True)

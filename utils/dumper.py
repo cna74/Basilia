@@ -8,6 +8,7 @@ import numpy as np
 import json
 import sys
 import os
+
 """
 dump the origin dataset's csv files
 """
@@ -31,12 +32,17 @@ def annotation_loader(dir_, folder_name) -> pd.DataFrame:
 
 
 def img_dirs(resource, dir_) -> np.ndarray:
+    dumped = join(DUMP_DIR, "img_dirs_{}.npy".format(resource))
+    if exists(dumped):
+        return np.load(dumped)
     if resource == "jpg":
         pathname = dir_+"*/*/*.jpg"
         if sys.platform == "win32":
             pathname = pathname.replace("\\", "/")
         dirs = glob(pathname=pathname)
         dirs = np.array(dirs)
+        dirs.dump(dumped)
+
     elif resource == "csv":
         pathname = dir_+"*/*images*.csv"
         if sys.platform == "win32":
@@ -47,6 +53,7 @@ def img_dirs(resource, dir_) -> np.ndarray:
             dfs = np.append(dfs, genfromtxt(c, dtype=np.str, delimiter=",")[1:])
         dirs = dfs.reshape((-1, 2))[1:]
         dirs[:, 0] = char.replace(dirs[:, 0], ".jpg", "")
+        dirs.dump(dumped)
     else:
         raise FileNotFoundError("can't find {} images".format(resource))
     return dirs

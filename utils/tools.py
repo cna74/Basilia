@@ -1,21 +1,20 @@
 from utils import dumper, finder, tf_generator
 from os.path import join, exists
 import matplotlib.pyplot as plt
+from colorama import Fore
 from utils import config
 from glob2 import glob
 import numpy as np
 import pickle
-import sys
 import cv2
 
 LABELS = dumper.label_loader(dir_=config.DATA_DIR)
 
 
-def write(s, condition=True):
+def colored_text(s, text_color=None, condition=True):
     if condition:
-        sys.stdout.write(s)
-        sys.stdout.write("\n")
-        sys.stdout.flush()
+        text_color = text_color.upper() if isinstance(text_color, str) else None
+        return "{}{}{}".format(Fore.__dict__.get(text_color, Fore.RESET), s, Fore.RESET)
 
 
 def dict_of_all_classes() -> dict:
@@ -26,7 +25,7 @@ def dict_of_all_classes() -> dict:
         raw = list(set([i[0] for i in LABELS.itertuples()]))
         classes = {}
         for i, j in enumerate(raw):
-            fnd = finder.Finder(subject=j, etc=True, resource=config.RESOURCE, just_count_images=True)
+            fnd = finder.Finder(subject=j, etc=True, resource=config.RESOURCE, just_count=True)
             result = sorted(list(fnd.search_result))
             if not len(result) == 1:
                 classes.update({j: result})
