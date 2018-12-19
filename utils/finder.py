@@ -60,7 +60,7 @@ class Finder:
             True Indicates a picture taken from the inside of the object (e.g., a car interior or inside of a building).
             False object is not inside
             None both of situation [Default]
-        :param just_count_images:
+        :param just_count:
             True just_count_images set this True to just check how many images finder may extract
             False Default value and will extract images [Default]
         :param automate: True automate all steps of finder LIKE A BOSS!!!
