@@ -15,7 +15,7 @@ import cv2
 
 class Finder:
     def __init__(self, subject=None, resource=config.RESOURCE, input_dir=config.DATA_DIR,
-                 out_dir=None, just=False, etc=True, is_group=None, is_occluded=None,
+                 out_dir=None, just=False, other=True, is_group=None, is_occluded=None,
                  is_truncated=None, size=None, is_depiction=None, automate=False,
                  is_inside=None, just_count=False):
         """
@@ -35,9 +35,9 @@ class Finder:
         :param just:
             True search_result=[subject,]
             False doesn't affect on search procedure
-        :param etc:
-            True and subject has sub-class search_result include and all of the sub-classes, [Default]
-            False and subject does't have any sub-class search_result would be empty,
+        :param other:
+            True if subject has sub-class search_result all of the sub-classes, [Default]
+            False if subject does't have any sub-class search_result would be empty,
             look at examples
         :param is_group:
             True finder will search for bboxes that represent a group of object in a bbox
@@ -89,7 +89,7 @@ class Finder:
         """
 
         # region params
-        self.etc = etc
+        self.other = other
         self.just = just
         self.size = size
         self.just_count = just_count
@@ -147,11 +147,11 @@ class Finder:
 
         # region subject
         if isinstance(subject, str):
-            self.search(subject=subject.capitalize(), etc=self.etc, just=self.just)
+            self.search(subject=subject.capitalize(), other=self.other, just=self.just)
             self._fill_search_result()
         elif isinstance(subject, (tuple, list)):
             for subj in subject:
-                self.search(subject=subj.capitalize(), etc=self.etc, just=self.just)
+                self.search(subject=subj.capitalize(), other=self.other, just=self.just)
                 self._fill_search_result()
             self._search_result = [tools.mid_to_string(s) for s in self.search_result]
         elif not subject:
@@ -234,7 +234,7 @@ class Finder:
                 out = '{},{},{},{},{},{},{},{}\n'.format(name, width, height, cls, *bbox)
                 file.write(out)
 
-    def bbox_test(self, max_=4, thickness=3):
+    def bbox_test(self, max_=4, thickness=4):
         select = self.table.loc[((self.table.Images > 0) & (self.table.Objects > 0))]
         select = select.head(1)
         if not select.empty:
@@ -243,9 +243,9 @@ class Finder:
             n = int(n[np.where(n <= max_)].max())
             tools.bbox_test(address=self.out_dir, target=target, n=n, thickness=thickness)
 
-    def search(self, subject, etc, just):
+    def search(self, subject, other, just):
         self._search_begin(subject=subject)
-        self._search_harvest(subject=subject, etc=etc, just=just)
+        self._search_harvest(subject=subject, other=other, just=just)
 
     def _search_begin(self, subject, json=None):
         subject = subject.capitalize()
@@ -268,11 +268,11 @@ class Finder:
                 elif 'Part' in node.keys():
                     self._search_begin(subject=subject, json=node['Part'])
 
-    def _search_harvest(self, subject, etc, just):
+    def _search_harvest(self, subject, other, just):
         if just:
             self._search_result = [tools.mid_to_string(subject, dir_=self.input_dir), ]
         else:
-            if not etc and tools.mid_to_string(subject, dir_=self.input_dir) in self._search_result and len(
+            if not other and tools.mid_to_string(subject, dir_=self.input_dir) in self._search_result and len(
                     self._search_result) > 1:
                 self._search_result.remove(tools.mid_to_string(subject, dir_=self.input_dir))
 
