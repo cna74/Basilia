@@ -1,6 +1,7 @@
 # Basilia
 An API for [Open-Image-V4](https://www.figure-eight.com/dataset/open-images-annotated-with-bounding-boxes/) to gather your desired images with bboxes in just **TWO LINES OF CODE!**
 [![open-image-v4-1024x655.png](https://i.postimg.cc/mrh0X00q/open-image-v4-1024x655.png)](https://postimg.cc/8FQKsnkB)
+
 ## Downloading DataSet
 
 if you want to use online just download [csv](https://github.com/cna74/Basilia/blob/master/#csv) and [json](https://github.com/cna74/Basilia/blob/master/#)
@@ -20,8 +21,10 @@ if you want to use online just download [csv](https://github.com/cna74/Basilia/b
     |[train_00](https://datasets.figure-eight.com/figure_eight_datasets/open-images/train_00.zip)| [train_01](https://datasets.figure-eight.com/figure_eight_datasets/open-images/train_01.zip) |[train_02](https://datasets.figure-eight.com/figure_eight_datasets/open-images/train_02.zip)|
     |[train_03](https://datasets.figure-eight.com/figure_eight_datasets/open-images/train_03.zip)| [train_04](https://datasets.figure-eight.com/figure_eight_datasets/open-images/train_04.zip)|[train_05](https://datasets.figure-eight.com/figure_eight_datasets/open-images/train_05.zip)|
     |[train_06](https://datasets.figure-eight.com/figure_eight_datasets/open-images/train_06.zip)| [train_07](https://datasets.figure-eight.com/figure_eight_datasets/open-images/train_06.zip)| [train_08](https://datasets.figure-eight.com/figure_eight_datasets/open-images/train_05.zip)|
+    |[validation](https://datasets.figure-eight.com/figure_eight_datasets/open-images/validation.zip)|[test](https://datasets.figure-eight.com/figure_eight_datasets/open-images/test.zip)| |
+    download and extract them
 
-- store like files like this, stared items are't necessary for online use 
+- store files like this, stared items are't necessary for online use 
 
 ```
 └── Open_Image
@@ -88,7 +91,7 @@ if you want to use online just download [csv](https://github.com/cna74/Basilia/b
   ```python
   from Basil import Finder
   # just count all type of fruits, won't extract them
-  Finder(subject="fruit", out_dir="/home/cna/Desktop/", just_count_images=True, automate=True)
+  Finder(subject="fruit", out_dir="/home/cna/Desktop/", just_count=True, automate=True)
   '''  just count images:
             Images  Objects
   Train        13271        0

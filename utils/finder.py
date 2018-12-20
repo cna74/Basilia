@@ -234,7 +234,7 @@ class Finder:
                 out = '{},{},{},{},{},{},{},{}\n'.format(name, width, height, cls, *bbox)
                 file.write(out)
 
-    def bbox_test(self, max_=5, thickness=3):
+    def bbox_test(self, max_=4, thickness=3):
         select = self.table.loc[((self.table.Images > 0) & (self.table.Objects > 0))]
         select = select.head(1)
         if not select.empty:
