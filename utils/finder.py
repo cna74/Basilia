@@ -178,7 +178,7 @@ class Finder:
         for out in dirs:
             tools.colored_print(out, text_color="cyan", condition=not self.just_count)
             result = output_path = csv_out = images_dir = None
-            a = b = "unknown"
+            b = "unknown"
             if not self.just_count:
                 output_path = join(self.out_dir, "records/{}.record".format(out))
                 csv_out = join(self.out_dir, "records/{}_bbox.csv".format(out))
