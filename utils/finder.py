@@ -162,10 +162,10 @@ class Finder:
         # endregion
 
         self.classes = dict([(cls, i) for i, cls in enumerate(self.search_result, start=1)])
-        tools.colored_print("searching for {}".format(self.search_result), text_color="blue")
 
         # region automate
         if automate:
+            tools.colored_print("searching for {}".format(self.search_result), text_color="blue")
             self.extract_images()
             if not self.just_count:
                 self.bbox_test(thickness=10)
