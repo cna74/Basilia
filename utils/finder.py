@@ -162,7 +162,7 @@ class Finder:
         # endregion
 
         self.classes = dict([(cls, i) for i, cls in enumerate(self.search_result, start=1)])
-        print(tools.colored_text("searching for {}".format(self.search_result), text_color="blue"))
+        tools.colored_print("searching for {}".format(self.search_result), text_color="blue")
 
         # region automate
         if automate:
@@ -176,23 +176,24 @@ class Finder:
         dirs = dirs if dirs is not None and isinstance(dirs, tuple) else self.dirs
 
         for out in dirs:
-            print(tools.colored_text(out, text_color="cyan", condition=not self.just_count))
-            result = None
+            tools.colored_print(out, text_color="cyan", condition=not self.just_count)
+            result = output_path = csv_out = images_dir = None
             a = b = 0
-            output_path = join(self.out_dir, "records/{}.record".format(out))
-            csv_out = join(self.out_dir, "records/{}_bbox.csv".format(out))
-            images_dir = join(self.out_dir, "images/{}".format(out))
+            if not self.just_count:
+                output_path = join(self.out_dir, "records/{}.record".format(out))
+                csv_out = join(self.out_dir, "records/{}_bbox.csv".format(out))
+                images_dir = join(self.out_dir, "images/{}".format(out))
 
             self._extract_data_frame(folder_name=out)
             imgs_id = list(set((i[1] for i in self.image_df.itertuples())))
 
             a += len(imgs_id)
-            print(tools.colored_text("{} images".format(a), text_color="green", condition=not self.just_count))
+            tools.colored_print("{} images".format(a), text_color="green", condition=not self.just_count)
             self.table.loc[out] = a, b
             if a > 0:
                 self._get_imgs_path_with_bboxes(imgs_id=imgs_id)
             b += len(self.data)
-            print(tools.colored_text("{} objects".format(b), text_color="green", condition=not self.just_count))
+            tools.colored_print("{} objects".format(b), text_color="green", condition=not self.just_count)
 
             self.table.loc[out] = a, b
             if b > 0 and not self.just_count:

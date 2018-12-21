@@ -11,10 +11,10 @@ import cv2
 # LABELS = dumper.label_loader(dir_=config.DATA_DIR)
 
 
-def colored_text(s, text_color=None, condition=True):
+def colored_print(s, text_color=None, condition=True):
     if condition:
         text_color = text_color.upper() if isinstance(text_color, str) else None
-        return "{}{}{}".format(Fore.__dict__.get(text_color, Fore.RESET), s, Fore.RESET)
+        print("{}{}{}".format(Fore.__dict__.get(text_color, Fore.RESET), s, Fore.RESET))
 
 
 def dict_of_all_classes(dir_=config.DATA_DIR) -> dict:
