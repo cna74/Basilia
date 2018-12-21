@@ -177,7 +177,8 @@ class Finder:
 
         for out in dirs:
             tools.colored_print(out, text_color="cyan", condition=not self.just_count)
-            a= b = result = output_path = csv_out = images_dir = None
+            result = output_path = csv_out = images_dir = None
+            a = b = "unknown"
             if not self.just_count:
                 output_path = join(self.out_dir, "records/{}.record".format(out))
                 csv_out = join(self.out_dir, "records/{}_bbox.csv".format(out))
@@ -186,14 +187,14 @@ class Finder:
             self._extract_data_frame(folder_name=out)
             imgs_id = list(set((i[1] for i in self.image_df.itertuples())))
 
-            a += len(imgs_id)
+            a = len(imgs_id)
             tools.colored_print("{} images".format(a), text_color="green", condition=not self.just_count)
             self.table.loc[out] = a, b
             if self.just_count:
                 continue
             if a > 0:
                 self._get_imgs_path_with_bboxes(imgs_id=imgs_id)
-            b += len(self.data)
+            b = len(self.data)
             tools.colored_print("{} objects".format(b), text_color="green", condition=not self.just_count)
 
             self.table.loc[out] = a, b
