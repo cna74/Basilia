@@ -190,13 +190,15 @@ class Finder:
             a += len(imgs_id)
             tools.colored_print("{} images".format(a), text_color="green", condition=not self.just_count)
             self.table.loc[out] = a, b
+            if self.just_count:
+                continue
             if a > 0:
                 self._get_imgs_path_with_bboxes(imgs_id=imgs_id)
             b += len(self.data)
             tools.colored_print("{} objects".format(b), text_color="green", condition=not self.just_count)
 
             self.table.loc[out] = a, b
-            if b > 0 and not self.just_count:
+            if b > 0:
                 if self.resource == "jpg":
                     folders = glob(self.input_dir + "{}/*/".format(out))
                     folders = char.rpartition(np.array(folders), "/")[:, 0]
