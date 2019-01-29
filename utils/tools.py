@@ -8,8 +8,6 @@ import numpy as np
 import pickle
 import cv2
 
-# LABELS = dumper.label_loader(dir_=config.DATA_DIR)
-
 
 def colored_print(s, text_color=None, condition=True):
     if condition:
@@ -23,10 +21,10 @@ def dict_of_all_classes(dir_=config.DATA_DIR) -> dict:
     if exists(dumped):
         classes = pickle.load(open(dumped, "rb"))
     else:
-        raw = list(set([i[0] for i in LABELS.itertuples()]))
+        raw = list(set([i[0] for i in labels.itertuples()]))
         classes = {}
         for i, j in enumerate(raw):
-            fnd = finder.Finder(subject=j, etc=True, resource=config.RESOURCE, just_count=True)
+            fnd = finder.Finder(subject=j, other=True, resource=config.RESOURCE, just_count=True)
             result = sorted(list(fnd.search_result))
             if not len(result) == 1:
                 classes.update({j: result})
@@ -84,5 +82,4 @@ def bbox_test(address, target, n=2, thickness=3):
 
 
 if __name__ == "__main__":
-    # print(dict_of_all_classes())
     pass
