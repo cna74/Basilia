@@ -99,5 +99,5 @@ if you want to use online just download [csv](https://github.com/cna74/Basilia/b
   Test          2545        0
   '''
   ```
-more examples in https://github.com/cna74/Basilia/blob/master/Demo.ipynb
+more examples in https://github.com/cna74/Basilia/blob/master/Examples.ipynb
 
