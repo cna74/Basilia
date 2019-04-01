@@ -101,3 +101,7 @@ if you want to use online just download [csv](https://github.com/cna74/Basilia/b
   ```
 more examples in https://github.com/cna74/Basilia/blob/master/Examples.ipynb
 
+### Tutorial
+[part 1: Using Basilia to gather data](https://www.youtu.be/frCVWcl8eas)
+
+[part 2: understanding Basilia [conditions]](https://www.youtu.be/hpAIZRFbseM)
