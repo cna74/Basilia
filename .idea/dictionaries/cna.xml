@@ -8,6 +8,7 @@
       <w>imread</w>
       <w>imwrite</w>
       <w>jupyter</w>
+      <w>pbtxt</w>
       <w>tensorflow</w>
       <w>venv</w>
       <w>xmax</w>

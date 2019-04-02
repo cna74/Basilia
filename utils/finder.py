@@ -131,7 +131,7 @@ class Finder:
             if exists(self.out_dir):
                 y_n = input("\n{} is already exist,\n"
                             "(y) remove files and folders in it\n"
-                            "(Enter) i was working on this dir now i want to resume\n"
+                            "(Enter-n) i was working on this dir now i want to resume\n"
                             "(y/n)?".format(self.out_dir))
                 if y_n == "y":
                     rmtree(self.out_dir)
@@ -224,6 +224,7 @@ class Finder:
 
                 # generate tf.record
                 tools.generate(csv_input=csv_out, images_dir=images_dir, output_path=output_path, classes=self.classes)
+        tools.export_pbtxt(self.classes, dir_=self.out_dir)
 
     def save_csv(self, csv_out):
         with open(csv_out, 'w') as file:
@@ -384,5 +385,5 @@ class Finder:
 
 
 if __name__ == '__main__':
-    Finder(subject="apple", is_group=True, is_depiction=True, is_inside=True, resource="jpg",
-           out_dir="/home/cna/Desktop/", input_dir="/media/cna/backpack/dataset/Open-Image/", automate=True)
+    Finder(subject="fruit", is_group=True, is_depiction=True, resource="jpg", out_dir="/home/cna/Desktop/",
+           input_dir="/media/cna/backpack/dataset/Open-Image/", automate=True)
