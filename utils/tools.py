@@ -84,7 +84,7 @@ def bbox_test(address, target, n=2, thickness=3):
 def export_pbtxt(obj_dict: dict, dir_):
     with open(join(dir_, "label_map.pbtxt"), "w") as pbtxt:
         for obj, i in obj_dict.items():
-            pbtxt.write("item {id: %d name: %s}\n" % (i, obj))
+            pbtxt.write("item {{id: {} name: '{}'}}\n".format(i, obj))
 
 
 if __name__ == "__main__":
