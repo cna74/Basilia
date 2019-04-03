@@ -44,14 +44,14 @@ def mid_to_string(mid_or_name, dir_=config.DATA_DIR) -> str:
         return selected['code']
 
 
-def draw(img, bboxes, thickness):
+def draw_bboxes_over_image(img, bboxes, thickness):
     bboxes = bboxes.astype(np.uint)
     for b in bboxes:
         img = cv2.rectangle(img=img, pt1=(b[0], b[1]), pt2=(b[2], b[3]), color=(0, 0, 255), thickness=thickness)
     return img
 
 
-def generate(csv_input, output_path, images_dir, classes):
+def generate_tf_records(csv_input, output_path, images_dir, classes):
     tf_generator.main(csv_input=csv_input, output_path=output_path, images_dir=images_dir, classes=classes)
 
 
@@ -71,7 +71,7 @@ def bbox_test(address, target, n=2, thickness=3):
         bboxes = res[:, config.BBOX_SLICE]
         titles, counts = np.unique(res[:, config.LABEL], return_counts=True)
         plt.subplot(n, n, idx)
-        img = draw(img, bboxes, thickness)
+        img = draw_bboxes_over_image(img, bboxes, thickness)
         plt.imshow(img)
         title = ""
         for i, j in zip(counts, titles):
@@ -81,8 +81,8 @@ def bbox_test(address, target, n=2, thickness=3):
     plt.show()
 
 
-def export_pbtxt(obj_dict: dict, dir_):
-    with open(join(dir_, "label_map.pbtxt"), "w") as pbtxt:
+def export_pbtxt(obj_dict: dict, path):
+    with open(path, "w") as pbtxt:
         for obj, i in obj_dict.items():
             pbtxt.write("item {{id: {} name: '{}'}}\n".format(i, obj))
 

@@ -139,7 +139,7 @@ class Finder:
                     print("resuming ")
             else:
                 makedirs(self.out_dir)
-            for d in ["images/Train", "images/Validation", "images/Test", "records"]:
+            for d in ["images/Train", "images/Validation", "images/Test", "training", "records"]:
                 mkd = join(self.out_dir, d)
                 if not exists(mkd):
                     makedirs(mkd)
@@ -174,6 +174,7 @@ class Finder:
 
     def extract_images(self, dirs=None, threads=cpu_count()):
         dirs = dirs if dirs is not None and isinstance(dirs, tuple) else self.dirs
+        pbtxt_path = join(self.out_dir, "training/label_map.pbtxt")
 
         for out in dirs:
             tools.colored_print(out, text_color="cyan", condition=not self.just_count)
@@ -223,8 +224,9 @@ class Finder:
                 self.data = np.delete(np.empty((1, len(config.DF_COLS))), 0, 0)
 
                 # generate tf.record
-                tools.generate(csv_input=csv_out, images_dir=images_dir, output_path=output_path, classes=self.classes)
-        tools.export_pbtxt(self.classes, dir_=self.out_dir)
+                tools.generate_tf_records(csv_input=csv_out, images_dir=images_dir,
+                                          output_path=output_path, classes=self.classes)
+        tools.export_pbtxt(self.classes, path=pbtxt_path)
 
     def save_csv(self, csv_out):
         with open(csv_out, 'w') as file:
