@@ -14,7 +14,7 @@ if you want to use online just download [csv](https://github.com/cna74/Basilia/b
     |[test-annotations-bbox.csv](https://datasets.figure-eight.com/figure_eight_datasets/open-images/test-annotations-bbox.csv)|[test-images.csv](https://datasets.figure-eight.com/figure_eight_datasets/open-images/test-images.csv)|
     |[class-descriptions-boxable.csv](https://storage.googleapis.com/openimages/2018_04/class-descriptions-boxable.csv)|[json_hierarchy](https://storage.googleapis.com/openimages/2018_04/bbox_labels_600_hierarchy.json)|
 
-- zip *: if you want to use it online zip files are't necessary
+- zip *: download zip file if you want to use basilia in offline mode
 
     |               |               |       |
     | ------------- | ------------- | ----- |
@@ -22,6 +22,7 @@ if you want to use online just download [csv](https://github.com/cna74/Basilia/b
     |[train_03](https://datasets.figure-eight.com/figure_eight_datasets/open-images/train_03.zip)| [train_04](https://datasets.figure-eight.com/figure_eight_datasets/open-images/train_04.zip)|[train_05](https://datasets.figure-eight.com/figure_eight_datasets/open-images/train_05.zip)|
     |[train_06](https://datasets.figure-eight.com/figure_eight_datasets/open-images/train_06.zip)| [train_07](https://datasets.figure-eight.com/figure_eight_datasets/open-images/train_06.zip)| [train_08](https://datasets.figure-eight.com/figure_eight_datasets/open-images/train_05.zip)|
     |[validation](https://datasets.figure-eight.com/figure_eight_datasets/open-images/validation.zip)|[test](https://datasets.figure-eight.com/figure_eight_datasets/open-images/test.zip)| |
+    
     download and extract them
 
 - store files like this, stared items are't necessary for online use 
@@ -56,7 +57,7 @@ if you want to use online just download [csv](https://github.com/cna74/Basilia/b
 - `conda create -n ElBasil python=3.6`
 - `source activate ElBasil`
 
-## install Basilia
+## clone Basilia
 - clone repo `git clone https://github.com/cna74/Basilia.git`
 - install requirements `pip install -r Basilia/requirements.txt`
 
@@ -65,7 +66,7 @@ if you want to use online just download [csv](https://github.com/cna74/Basilia/b
 - move to research directory `cd models/research/`
 - install object-detection-api `python3 setup.py install`
 
-## edit `config.py`
+## edit `config.py` file
 - open `Basilia/utils/config.py`
   ```python
   DATA_DIR="<path-to-open-image-directory>"
