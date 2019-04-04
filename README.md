@@ -108,4 +108,6 @@ more examples in https://github.com/cna74/Basilia/blob/master/Examples.ipynb
 [part 2: understanding Basilia [conditions]](https://www.youtube.com/watch?v=hpAlZRFbseM)
 
 
-[![Basilia part 1](https://www.img.youtube.com/vi/hpAlZRFbseM/0.jpg)](https://www.youtube.com/watch?v=hpAlZRFbseM)
+[![Basilia part 1](https://github.com/cna74/stored_files/blob/master/basilia_2.png)](https://www.youtube.com/watch?v=frCVWcI8eas)
+
+[![Basilia part 2](https://github.com/cna74/stored_files/blob/master/basilia_1.png)](https://www.youtube.com/watch?v=hpAlZRFbseM)
