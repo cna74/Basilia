@@ -106,3 +106,6 @@ more examples in https://github.com/cna74/Basilia/blob/master/Examples.ipynb
 [part 1: Using Basilia to gather data](https://www.youtube.com/watch?v=frCVWcI8eas)
 
 [part 2: understanding Basilia [conditions]](https://www.youtube.com/watch?v=hpAlZRFbseM)
+
+
+[![Basilia part 1](https://www.img.youtube.com/vi/hpAlZRFbseM/0.jpg)](https://www.youtube.com/watch?v=hpAlZRFbseM)
