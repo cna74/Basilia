@@ -19,7 +19,7 @@ kiwisolver==1.0.1
 Markdown==3.0.1
 matplotlib==3.0.2
 numpy==1.15.4
-opencv-python==3.4.1.15
+opencv-python==4.2.0.32
 pandas==0.23.4
 pathlib==1.0.1
 pillow>=7.1.0
